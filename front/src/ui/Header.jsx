@@ -16,8 +16,8 @@ export default function Header({ title, subtitle, centered = true }) {
 
         {/* 타이틀/서브타이틀 */}
         <div className={centered ? "text-center" : ""}>
-          <h1 className="text-[35px] leading-7 font-extrabold text-[#F07818]"> {title} </h1>
-          {subtitle && <p className="mt-1 text-[16px] text-[#8A6B52]">{subtitle}</p>}
+          <h1 className="text-[35px] leading-7 font-extrabold text-[#FF8400]"> {title} </h1>
+          {subtitle && <p className="mt-3 text-[16px] text-[#8A6B52]">{subtitle}</p>}
         </div>
       </div>
     </header>

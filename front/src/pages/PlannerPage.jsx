@@ -4,6 +4,8 @@ import StepCard from "../ui/StepCard";
 import Segmented from "../ui/Segmented";
 import Chip from "../ui/Chip";
 import BottomNav from "../ui/BottomNav";
+import { useNavigate } from "react-router-dom";
+
 
 const DURATIONS = ["당일치기", "1박 2일", "2박 3일", "3박 4일"];
 const TAGS = ["휴식 #힐링", "맛집 #로컬푸드", "포토 #인생샷", "액티비티 #도전", "문화 #전시", "쇼핑"];
@@ -19,6 +21,8 @@ export default function PlannerPage() {
   const [customOpen, setCustomOpen] = useState(false);
   const [customText, setCustomText] = useState("");
 
+  const navigate = useNavigate();
+
   const toggleTag = (t) =>
     setSelectedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
 
@@ -31,12 +35,21 @@ export default function PlannerPage() {
 
   const submit = (e) => {
     e.preventDefault();
-    console.log({ duration, departure, withWho, selectedTags, freeText });
-    alert("제출 테스트 ✅ 콘솔 확인!");
+
+    // 나중에 ResultPage에서 쓰고 싶으면 state로 같이 넘길 수 있음
+    navigate("/result", {
+      state: {
+        duration,
+        departure,
+        withWho,
+        selectedTags,
+        freeText,
+      },
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFF2E6] to-white relative">
+    <div className="min-h-screen bg-gradient-to-b  to-white relative">
       {/* 배경 지도: 데스크탑에서 조금 더 강조 */}
       <div
         aria-hidden
@@ -156,7 +169,7 @@ export default function PlannerPage() {
           <button
             type="submit"
             form="planner-form"
-            className="w-full px-5 py-3 text-[20px] rounded-2xl bg-[#F07818] text-white font-extrabold tracking-tight"
+            className="w-full px-5 py-3 text-[20px] rounded-2xl bg-[#FF8400] text-[#FFF4E8] font-extrabold tracking-tight"
           >
             AI로 맞춤 여행 코스 추천받기
           </button>

@@ -1,16 +1,19 @@
+// src/pages/AccountSettingsPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import Header from "../ui/Header";
 import { useLoading } from "../context/LoadingContext";
 import { useAlert } from "../context/AlertContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+const CHANGE_PW_PATH =
+  import.meta.env.VITE_CHANGE_PASSWORD_PATH || "/auth/change-password";
 
 /**
- * API 가정 (명세서 기준 명칭이 다르면 path만 바꿔주면 됨)
- * - GET  /account/me                      : 내 정보 조회
- * - PUT  /account/me                      : 내 정보 수정 { name, birthDate, email }
- * - POST /account/change-password         : 비번변경 { newPassword, newPasswordConfirm }
- * - (선택) GET VITE_SIGNUP_ID_CHECK_PATH  : 아이디 중복확인 (수정 불가라면 알럿만)
+ * API (명세 반영)
+ * - GET   /users/me                       : 내 정보 조회
+ * - PATCH /users/me                       : 내 정보 부분 수정 { name, birthDate, email }
+ * - POST  (env) CHANGE_PW_PATH            : 비번변경 { newPassword, newPasswordConfirm }
+ * - 운영 중 loginId 변경/중복확인: 미제공 → UI는 readOnly + 비활성
  */
 
 export default function AccountSettingsPage() {
@@ -34,11 +37,12 @@ export default function AccountSettingsPage() {
   const [successOpen, setSuccessOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 비번 변경 모달
+  // 비밀번호 변경 모달
   const [pwOpen, setPwOpen] = useState(false);
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
 
+  // 비밀번호 유효성
   const pwValid = useMemo(
     () => /[A-Za-z]/.test(newPw) && /[0-9]/.test(newPw) && newPw.length >= 8,
     [newPw]
@@ -50,10 +54,10 @@ export default function AccountSettingsPage() {
     editing.birthDate !== me.birthDate ||
     editing.email !== me.email;
 
-  // --- 초기 로드: 내 정보 가져오기 ---
+  // 초기 로드: 내 정보
   useEffect(() => {
     withLoading(async () => {
-      const res = await fetch(`${API_BASE}/account/me`, {
+      const res = await fetch(`${API_BASE}/users/me`, {
         headers: authHeaders(),
       });
       if (!res.ok) {
@@ -61,21 +65,22 @@ export default function AccountSettingsPage() {
         return;
       }
       const data = await res.json();
+      const birth = (data.birthDate ?? "").slice(0, 10); // yyyy-MM-dd
       setMe({
         loginId: data.loginId ?? "",
         name: data.name ?? "",
-        birthDate: (data.birthDate ?? "").slice(0, 10), // yyyy-MM-dd
+        birthDate: birth,
         email: data.email ?? "",
       });
       setEditing({
         name: data.name ?? "",
-        birthDate: (data.birthDate ?? "").slice(0, 10),
+        birthDate: birth,
         email: data.email ?? "",
       });
     });
   }, []);
 
-  // --- 저장 ---
+  // 저장
   const onSave = async (e) => {
     e.preventDefault();
     if (!edited || saving) return;
@@ -83,8 +88,8 @@ export default function AccountSettingsPage() {
     setErrorMsg("");
 
     await withLoading(async () => {
-      const res = await fetch(`${API_BASE}/account/me`, {
-        method: "PUT",
+      const res = await fetch(`${API_BASE}/users/me`, {
+        method: "PATCH",
         headers: { ...authHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editing.name,
@@ -106,39 +111,37 @@ export default function AccountSettingsPage() {
     });
   };
 
-  // --- 아이디 중복확인 (아이디 수정 불가면 안내만) ---
-  const onCheckId = async () => {
-    if (!me.loginId) return;
-    const path = import.meta.env.VITE_SIGNUP_ID_CHECK_PATH; // 예: /auth/check-loginId?loginId=
-    if (!path) return showAlert("아이디 변경은 제공하지 않아요");
-    await withLoading(async () => {
-      const res = await fetch(`${API_BASE}${path}${encodeURIComponent(me.loginId)}`);
-      if (res.ok) showAlert("사용 가능한 아이디입니다");
-      else showAlert("이미 사용 중인 아이디예요");
-    });
-  };
+  // ID 변경/중복확인: 운영 중 미제공 → 안내만
+  const onCheckId = () =>
+    showAlert("운영 중 ID 변경은 제공하지 않아요. 회원가입에서만 확인합니다.");
 
-  // --- 비번 변경 ---
+  // 비밀번호 변경
   const openPw = () => {
-    setNewPw(""); setNewPw2(""); setPwOpen(true);
+    setNewPw("");
+    setNewPw2("");
+    setPwOpen(true);
   };
+
   const submitPw = async () => {
-    if (!pwValid) return showAlert("영문/숫자 포함 8자 이상으로 입력해 주세요");
-    if (!pwMatch) return showAlert("비밀번호가 일치하지 않아요");
+    if (!pwValid) return showAlert("영문/숫자 포함 8자 이상으로 입력해 주세요.");
+    if (!pwMatch) return showAlert("비밀번호가 일치하지 않아요.");
 
     await withLoading(async () => {
-      const res = await fetch(`${API_BASE}/account/change-password`, {
+      const res = await fetch(`${API_BASE}${CHANGE_PW_PATH}`, {
         method: "POST",
         headers: { ...authHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword: newPw, newPasswordConfirm: newPw2 }),
+        body: JSON.stringify({
+          newPassword: newPw,
+          newPasswordConfirm: newPw2,
+        }),
       });
       if (!res.ok) {
         const err = await safeJson(res);
-        showAlert(err?.message || "비밀번호 변경에 실패했어요");
+        showAlert(err?.message || "비밀번호 변경에 실패했어요.");
         return;
       }
       setPwOpen(false);
-      showAlert("비밀번호가 변경되었습니다");
+      setSuccessOpen(true); // 비밀번호도 “변경되었습니다” 모달 재사용
     });
   };
 
@@ -147,12 +150,18 @@ export default function AccountSettingsPage() {
       <Header title="계정 설정" />
       <main className="mx-auto max-w-[420px] px-4 pb-16">
         <section className="mt-6 rounded-2xl border border-[#E6D9CC] bg-white p-6 shadow-sm">
-          <h1 className="mb-6 text-xl font-semibold text-[#8A6B52]">계정 설정</h1>
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-[#8A6B52]">계정 설정</h1>
+            {/* 로고 자리 - 필요 시 이미지 넣으세요 */}
+            {/* <img src="/logo-b.png" className="h-8" /> */}
+          </div>
 
           <form onSubmit={onSave} className="space-y-4">
-            {/* ID (읽기전용) */}
+            {/* ID (읽기전용 + 중복확인 비활성) */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#8A6B52]">ID</label>
+              <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
+                ID
+              </label>
               <div className="flex gap-2">
                 <input
                   value={me.loginId}
@@ -162,7 +171,9 @@ export default function AccountSettingsPage() {
                 <button
                   type="button"
                   onClick={onCheckId}
-                  className="shrink-0 rounded-xl border border-[#E6D9CC] px-3 text-sm text-[#8A6B52] hover:bg-[#F6F1EA]"
+                  disabled
+                  title="회원가입에서만 제공"
+                  className="shrink-0 cursor-not-allowed rounded-xl border border-[#E6D9CC] bg-[#F6F1EA] px-3 text-sm text-[#8A6B52]/60"
                 >
                   중복확인
                 </button>
@@ -171,7 +182,9 @@ export default function AccountSettingsPage() {
 
             {/* PW 변경 버튼 */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#8A6B52]">PW</label>
+              <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
+                PW
+              </label>
               <div className="flex gap-2">
                 <input
                   value={"•".repeat(10)}
@@ -197,7 +210,9 @@ export default function AccountSettingsPage() {
 
             {/* 생년월일 */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#8A6B52]">생년월일</label>
+              <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
+                생년월일
+              </label>
               <input
                 type="date"
                 value={editing.birthDate}
@@ -216,13 +231,19 @@ export default function AccountSettingsPage() {
               onChange={(v) => setEditing((s) => ({ ...s, email: v }))}
             />
 
-            {!!errorMsg && <p className="text-sm text-[#C62828]">{errorMsg}</p>}
+            {!!errorMsg && (
+              <p className="text-sm text-[#C62828]">{errorMsg}</p>
+            )}
 
             <button
               type="submit"
               disabled={!edited || saving}
               className={`mt-2 w-full rounded-2xl px-4 py-3 font-semibold text-white shadow transition
-                ${!edited || saving ? "bg-[#2F6D62]/30" : "bg-[#2F6D62] hover:brightness-110"}`}
+                ${
+                  !edited || saving
+                    ? "bg-[#2F6D62]/30"
+                    : "bg-[#2F6D62] hover:brightness-110"
+                }`}
             >
               {saving ? "저장 중..." : "저장"}
             </button>
@@ -234,8 +255,12 @@ export default function AccountSettingsPage() {
       {pwOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40">
           <div className="w-[90%] max-w-md rounded-2xl border border-[#E6D9CC] bg-white p-5 shadow-lg">
-            <p className="mb-3 text-sm font-semibold text-[#8A6B52]">비밀번호 입력</p>
-            <p className="mb-3 text-xs text-[#8A6B52]/70">영문/숫자를 포함한 8자 이상</p>
+            <p className="mb-3 text-sm font-semibold text-[#8A6B52]">
+              비밀번호 입력
+            </p>
+            <p className="mb-3 text-xs text-[#8A6B52]/70">
+              영문/숫자를 포함한 8자 이상
+            </p>
 
             <InputRow
               type="password"
@@ -250,10 +275,14 @@ export default function AccountSettingsPage() {
               onChange={setNewPw2}
             />
             {!pwValid && newPw && (
-              <p className="mt-1 text-xs text-[#C62828]">조건을 만족하지 않아요.</p>
+              <p className="mt-1 text-xs text-[#C62828]">
+                조건을 만족하지 않아요.
+              </p>
             )}
             {!pwMatch && newPw2 && (
-              <p className="mt-1 text-xs text-[#C62828]">비밀번호가 일치하지 않아요.</p>
+              <p className="mt-1 text-xs text-[#C62828]">
+                비밀번호가 일치하지 않아요.
+              </p>
             )}
 
             <div className="mt-4 flex justify-end gap-2">
@@ -265,7 +294,7 @@ export default function AccountSettingsPage() {
               </button>
               <button
                 onClick={submitPw}
-                className="rounded-xl bg-[#F07818] px-4 py-2 font-semibold text-white hover:brightness-110"
+                className="rounded-xl bg-[#2F6D62] px-4 py-2 font-semibold text-white hover:brightness-110"
               >
                 변경
               </button>
@@ -274,11 +303,13 @@ export default function AccountSettingsPage() {
         </div>
       )}
 
-      {/* 저장 성공 모달 */}
+      {/* 공통 성공 모달 (정보 저장 / 비번 변경 둘 다 사용) */}
       {successOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40">
           <div className="w-[90%] max-w-md rounded-2xl border border-[#E6D9CC] bg-white p-6 shadow-lg">
-            <p className="mb-4 text-[#2F6D62]">변경되었습니다</p>
+            <p className="mb-4 text-center text-lg font-semibold text-[#2F6D62]">
+              변경되었습니다
+            </p>
             <div className="flex justify-end">
               <button
                 onClick={() => setSuccessOpen(false)}
@@ -298,7 +329,9 @@ export default function AccountSettingsPage() {
 function Field({ label, value, onChange, placeholder }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-[#8A6B52]">{label}</label>
+      <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
+        {label}
+      </label>
       <div className="relative">
         <input
           value={value}
@@ -349,5 +382,10 @@ function authHeaders() {
 }
 
 async function safeJson(res) {
-  try { return await res.json(); } catch { return null; }
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
+

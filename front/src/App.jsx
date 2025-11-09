@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   useLocation,
+  useParams,
 } from "react-router-dom";
 
 // 전역 로딩/알럿
@@ -26,9 +27,33 @@ import SignupPage from "./pages/SignupPage";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
 import MyReviewsPage from "./pages/MyReviewsPage";
 
+/* ===============================
+   내부 간단 플레이스홀더 (404 방지)
+   =============================== */
+function SavedCoursesPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF6ED] to-[#FDF7F1] p-6">
+      <h1 className="text-xl font-semibold text-[#8A6B52]">저장된 코스</h1>
+      <p className="mt-3 text-sm text-[#6B5B4A]">전체 저장 코스 목록 (연결 예정)</p>
+    </div>
+  );
+}
+function CourseDetailPage() {
+  const { id } = useParams();
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF6ED] to-[#FDF7F1] p-6">
+      <h1 className="text-xl font-semibold text-[#8A6B52]">코스 상세</h1>
+      <p className="mt-2 text-sm text-[#6B5B4A]">코스 ID: {id}</p>
+      <p className="mt-1 text-sm text-[#6B5B4A]">세부 정보는 백엔드 연결 시 표시됩니다.</p>
+    </div>
+  );
+}
+
 function Layout() {
   const location = useLocation();
-  const hideNav = location.pathname === "/"; // 홈에서는 네비 숨김
+  // 홈에서도 표시 -> 로그인/회원가입만 숨김
+  const HIDE_NAV = ["/login", "/signup"];
+  const hideNav = HIDE_NAV.includes(location.pathname);
 
   return (
     <>
@@ -44,13 +69,18 @@ function Layout() {
 
         {/* 마이페이지 하위 */}
         <Route path="/settings" element={<AccountSettingsPage />} />
+        <Route path="/account" element={<AccountSettingsPage />} /> {/* 호환용 */}
         <Route path="/my-reviews" element={<MyReviewsPage />} />
+
+        {/* 코스 관련 (플레이스홀더) */}
+        <Route path="/saved-courses" element={<SavedCoursesPage />} />
+        <Route path="/course/:id" element={<CourseDetailPage />} />
 
         {/* 기타 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {!hideNav && <BottomNav />}{/* 홈이 아닐 때만 표시 */}
+      {!hideNav && <BottomNav />}
     </>
   );
 }

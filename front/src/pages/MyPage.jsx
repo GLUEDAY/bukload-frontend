@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../ui/Header";
 import BottomNav from "../ui/BottomNav";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useAlert } from "../context/AlertContext"; 
 
 const API = import.meta.env.VITE_API_BASE_URL || "/api";
 const authHeader = () => {
@@ -12,6 +13,8 @@ const authHeader = () => {
 
 export default function MyPage() {
   const nav = useNavigate();
+  const { showAlert } = useAlert(); 
+
   const [points, setPoints] = useState({ total: 0, loading: true });
   const [saved, setSaved] = useState({ list: [], loading: true });
 
@@ -22,7 +25,6 @@ export default function MyPage() {
         const j = await r.json();
         setPoints({ total: j.totalPoint ?? 0, loading: false });
       } catch {
-        // 백엔드 미연결 시에도 UI가 비지 않도록
         setPoints({ total: 1500, loading: false });
       }
     })();
@@ -35,8 +37,20 @@ export default function MyPage() {
       } catch {
         setSaved({
           list: [
-            { id: 101, title: "로컬 맛집 완전 정복 코스", region: "의정부", dayTag: "당일치기", thumb: "/map-placeholder.png" },
-            { id: 102, title: "감성 카페 & 독립 서점 코스", region: "파주", dayTag: "반나절", thumb: "/map-placeholder.png" },
+            {
+              id: 101,
+              title: "로컬 맛집 완전 정복 코스",
+              region: "의정부",
+              dayTag: "당일치기",
+              thumb: "/map-placeholder.png",
+            },
+            {
+              id: 102,
+              title: "감성 카페 & 독립 서점 코스",
+              region: "파주",
+              dayTag: "반나절",
+              thumb: "/map-placeholder.png",
+            },
           ],
           loading: false,
         });
@@ -47,7 +61,7 @@ export default function MyPage() {
   const goBack = () => nav(-1);
   const logout = () => {
     localStorage.removeItem("accessToken");
-    nav("/login"); // 로그아웃 후 로그인 화면으로
+    nav("/login");
   };
 
   return (
@@ -70,12 +84,16 @@ export default function MyPage() {
               {points.loading ? "···" : points.total.toLocaleString()}{" "}
               <span className="text-[#F07818]">P</span>
             </div>
-            <Link
-              to="/points-store"
-              className="inline-block mt-3 text-xs px-3 py-2 rounded-full border border-[#E6D9CC] hover:bg-[#FFF5EC]"
+
+            {/* ✅ 문자열만 넘기면 AlertContext가 처리 */}
+            <button
+              onClick={() =>
+                showAlert("포인트 스토어는 준비 중이에요! 다음 업데이트에서 만나요 :)")
+              }
+              className="mt-3 text-xs px-3 py-2 rounded-full border border-[#E6D9CC] hover:bg-[#FFF5EC]"
             >
               포인트 스토어 가기
-            </Link>
+            </button>
           </div>
         </section>
 
@@ -89,7 +107,9 @@ export default function MyPage() {
           </div>
 
           <div className="mt-3 grid grid-cols-1 gap-3">
-            {saved.loading && <div className="h-[74px] rounded-xl border border-[#E6D9CC] bg-white/60 animate-pulse" />}
+            {saved.loading && (
+              <div className="h-[74px] rounded-xl border border-[#E6D9CC] bg-white/60 animate-pulse" />
+            )}
 
             {!saved.loading && saved.list.length === 0 && (
               <div className="text-sm text-[#8A6B52] border border-dashed border-[#E6D9CC] rounded-xl p-4 text-center">

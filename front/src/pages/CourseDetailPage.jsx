@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "../ui/BottomNav";
+import BackImage from "../assets/back.png";
+import TrashImage from "../assets/trash.png";
 
 export default function CourseDetailPage() {
   const navigate = useNavigate();
@@ -134,28 +136,25 @@ export default function CourseDetailPage() {
     <div className="min-h-screen flex flex-col">
       {/* 상단 헤더 */}
       <header className="bg-white">
-        <div className="px-4 pt-6 pb-5 flex items-center">
+        <div className="px-4 pt-6 pb-3 flex justify-between items-center ">
           <button
             type="button"
             onClick={() => navigate(-1)}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5"
           >
-            <span className="text-2xl text-gray-700">←</span>
+             <img
+                            src={BackImage}
+                            alt="화살표"
+                            className="w-25 h-25 object-contain"
+                          />
           </button>
-
-          {/* 가운데 정렬된 제목 */}
-          <div className="flex-1 flex justify-center">
-            <h1 className="text-[20px] font-bold text-[#414141]">
-              {isEditing ? "코스 수정하기" : "로컬 맛집 완전 정복 코스"}
-            </h1>
-          </div>
 
           {/* 오른쪽 저장 버튼 (수정 모드일 때만) */}
           {isEditing ? (
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="text-[16px] font-semibold text-[#5131C3]"
+              className="text-[16px] font-semibold text-[#5131C3] "
             >
               저장
             </button>
@@ -167,6 +166,14 @@ export default function CourseDetailPage() {
 
       {/* 본문 */}
       <main className="flex-1 overflow-y-auto px-4 pb-24">
+
+        {/* 가운데 정렬된 제목 */}
+          <div className="flex-1 flex justify-start px-4">
+            <h1 className="text-[20px] font-bold text-[#974E00]">
+              {isEditing ? "코스 수정하기" : "로컬 맛집 완전 정복 코스"}
+            </h1>
+          </div>
+
         <section className="max-w-[360px] mx-auto">
           {/* 지도 카드 */}
           <div className="mt-5 bg-white overflow-hidden border border-[#D9D9D9]">
@@ -222,7 +229,11 @@ export default function CourseDetailPage() {
                       onClick={() => handleDeletePlace(place.id)}
                       className="w-8 h-8 flex items-center justify-center"
                     >
-                      <span className="text-[17px] text-[#FF5A5A]">🗑️</span>
+                        <img
+                                                  src={TrashImage}
+                                                  alt="쓰레기"
+                                                  className="w-10 h-10 object-contain"
+                                                />
                     </button>
                   </div>
                 ))}

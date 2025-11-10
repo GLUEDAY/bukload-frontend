@@ -2,6 +2,8 @@
 import { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "../ui/BottomNav";
+import PhotoImage from "../assets/photo.png";
+import BackImage from "../assets/back.png";
 
 export default function ReceiptProofPage() {
   const navigate = useNavigate();
@@ -37,7 +39,11 @@ export default function ReceiptProofPage() {
             onClick={() => navigate(-1)}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5"
           >
-            <span className="text-2xl text-gray-700">←</span>
+             <img
+                            src={BackImage}
+                            alt="화살표"
+                            className="w-25 h-25 object-contain"
+                          />
           </button>
           <div className="w-8" />
         </div>
@@ -76,10 +82,11 @@ export default function ReceiptProofPage() {
               ) : (
                 <>
                   <div className="w-16 h-16 rounded-full bg-[#F0F0F5] flex items-center justify-center">
-                    {/* 아이콘 느낌 */}
-                    <span className="text-[28px] text-[#B0B0C0]">
-                      📷
-                    </span>
+                    <img
+                       src={PhotoImage}
+                       alt="포토"
+                       className="w-25 h-25 object-contain"
+                     />
                   </div>
                   <p className="text-[22px] font-semibold text-[#313131]">
                     영수증 사진 올리기

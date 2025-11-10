@@ -2,6 +2,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
 import BottomNav from "../ui/BottomNav";
+import PhotoImage from "../assets/photo.png";
+import BackImage from "../assets/back.png";
 
 export default function ReviewRegisterPage() {
   const navigate = useNavigate();
@@ -43,7 +45,11 @@ export default function ReviewRegisterPage() {
             onClick={() => navigate(-1)}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5"
           >
-            <span className="text-2xl text-gray-700">←</span>
+             <img
+                src={BackImage}
+                alt="화살표"
+                className="w-25 h-25 object-contain"
+              />
           </button>
           <div className="w-8" />
         </div>
@@ -79,9 +85,13 @@ export default function ReviewRegisterPage() {
                     className="w-full h-full object-cover rounded-[10px]"
                   />
                 ) : idx === 2 ? (
-                  <span className="text-3xl text-[#D0D0D0]">+</span>
+                  <span className="text-6xl text-[#D0D0D0]">+</span>
                 ) : (
-                  <span className="text-3xl text-[#D0D0D0]">📷</span>
+                   <img
+                      src={PhotoImage}
+                        alt="포토"
+                        className="w-10 h-10 object-contain"
+                   />
                 )}
               </button>
             ))}

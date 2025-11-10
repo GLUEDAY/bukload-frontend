@@ -6,7 +6,6 @@ import Chip from "../ui/Chip";
 import BottomNav from "../ui/BottomNav";
 import { useNavigate } from "react-router-dom";
 
-
 const DURATIONS = ["당일치기", "1박 2일", "2박 3일", "3박 4일"];
 const TAGS = ["휴식 #힐링", "맛집 #로컬푸드", "포토 #인생샷", "액티비티 #도전", "문화 #전시", "쇼핑"];
 

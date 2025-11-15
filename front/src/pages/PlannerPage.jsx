@@ -1,38 +1,47 @@
-import { useState } from "react";
-import Header from "../ui/Header";
-import StepCard from "../ui/StepCard";
-import Segmented from "../ui/Segmented";
-import Chip from "../ui/Chip";
-import BottomNav from "../ui/BottomNav";
+import { useState } from 'react';
+import Header from '../ui/Header';
+import StepCard from '../ui/StepCard';
+import Segmented from '../ui/Segmented';
+import Chip from '../ui/Chip';
+import BottomNav from '../ui/BottomNav';
 
-const DURATIONS = ["당일치기", "1박 2일", "2박 3일", "3박 4일"];
-const TAGS = ["휴식 #힐링", "맛집 #로컬푸드", "포토 #인생샷", "액티비티 #도전", "문화 #전시", "쇼핑"];
+const DURATIONS = ['당일치기', '1박 2일', '2박 3일', '3박 4일'];
+const TAGS = [
+  '휴식 #힐링',
+  '맛집 #로컬푸드',
+  '포토 #인생샷',
+  '액티비티 #도전',
+  '문화 #전시',
+  '쇼핑',
+];
 
 export default function PlannerPage() {
-  const [duration, setDuration] = useState("1박 2일");
-  const [departure, setDeparture] = useState("");
-  const [withWho, setWithWho] = useState("연인");
+  const [duration, setDuration] = useState('1박 2일');
+  const [departure, setDeparture] = useState('');
+  const [withWho, setWithWho] = useState('연인');
   const [selectedTags, setSelectedTags] = useState([]);
-  const [freeText, setFreeText] = useState("");
+  const [freeText, setFreeText] = useState('');
 
   // STEP2 직접입력
   const [customOpen, setCustomOpen] = useState(false);
-  const [customText, setCustomText] = useState("");
+  const [customText, setCustomText] = useState('');
 
   const toggleTag = (t) =>
-    setSelectedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+    setSelectedTags((prev) =>
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+    );
 
   const addCustomTag = () => {
     const t = customText.trim();
     if (!t) return;
     if (!selectedTags.includes(t)) setSelectedTags((prev) => [...prev, t]);
-    setCustomText("");
+    setCustomText('');
   };
 
   const submit = (e) => {
     e.preventDefault();
     console.log({ duration, departure, withWho, selectedTags, freeText });
-    alert("제출 테스트 ✅ 콘솔 확인!");
+    alert('제출 테스트 ✅ 콘솔 확인!');
   };
 
   return (
@@ -43,7 +52,11 @@ export default function PlannerPage() {
         className="pointer-events-none absolute inset-0 opacity-30 lg:opacity-40 bg-[url('/map-placeholder.png')] bg-center bg-no-repeat bg-contain"
       />
 
-      <Header title="BukLoad" subtitle="현무와 함께 만드는 나만의 경기 북부 여행" centered />
+      <Header
+        title="BukLoad"
+        subtitle="현무와 함께 만드는 나만의 경기 북부 여행"
+        centered
+      />
 
       {/* 폼: id를 부여해서 고정 CTA와 연결 */}
       <form id="planner-form" onSubmit={submit}>
@@ -53,7 +66,9 @@ export default function PlannerPage() {
           <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6">
             {/* 좌측 컬럼: STEP 1 */}
             <StepCard title="STEP 1">
-              <label className="block text-[18px] md:text-sm font-medium text-[#8A6B52] mb-1">얼마나 떠날까요?</label>
+              <label className="block text-[18px] md:text-sm font-medium text-[#8A6B52] mb-1">
+                얼마나 떠날까요?
+              </label>
               <div className="mb-3">
                 <select
                   className="w-full rounded-xl border border-[#E6D9CC] bg-white px-3 py-2 text-[18px] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_2px_6px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-[#F4A259]"
@@ -61,12 +76,16 @@ export default function PlannerPage() {
                   onChange={(e) => setDuration(e.target.value)}
                 >
                   {DURATIONS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              <label className="block text-[18px] md:text-sm font-medium text-[#8A6B52] mb-1">어디서 출발할까요?</label>
+              <label className="block text-[18px] md:text-sm font-medium text-[#8A6B52] mb-1">
+                어디서 출발할까요?
+              </label>
               <input
                 className="w-full rounded-xl border border-[#E6D9CC] bg-white placeholder:text-[#B7A9A0] px-3 py-2 text-[18px] mb-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_2px_6px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-[#F4A259]"
                 placeholder="ex. 의정부역"
@@ -74,9 +93,11 @@ export default function PlannerPage() {
                 onChange={(e) => setDeparture(e.target.value)}
               />
 
-              <label className="block text-[18px] md:text-sm font-medium text-[#8A6B52] mb-2">누구와 함께 떠날까요?</label>
+              <label className="block text-[18px] md:text-sm font-medium text-[#8A6B52] mb-2">
+                누구와 함께 떠날까요?
+              </label>
               <Segmented
-                options={["혼자", "친구", "연인", "가족"]}
+                options={['혼자', '친구', '연인', '가족']}
                 value={withWho}
                 onChange={(v) => setWithWho(v)}
               />
@@ -84,17 +105,26 @@ export default function PlannerPage() {
 
             {/* 우측 컬럼: STEP 2 */}
             <StepCard title="STEP 2" className="lg:mt-0">
-              <p className="text-[18px] md:text-sm font-medium text-[#8A6B52] mb-3">어떤 여행을 꿈꾸시나요?</p>
+              <p className="text-[18px] md:text-sm font-medium text-[#8A6B52] mb-3">
+                어떤 여행을 꿈꾸시나요?
+              </p>
 
               {/* 고정 태그 */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {TAGS.map((t) => (
-                  <Chip key={t} active={selectedTags.includes(t)} onClick={() => toggleTag(t)}>
+                  <Chip
+                    key={t}
+                    active={selectedTags.includes(t)}
+                    onClick={() => toggleTag(t)}
+                  >
                     {t}
                   </Chip>
                 ))}
                 {/* 직접 입력 토글 */}
-                <Chip active={customOpen} onClick={() => setCustomOpen((v) => !v)}>
+                <Chip
+                  active={customOpen}
+                  onClick={() => setCustomOpen((v) => !v)}
+                >
                   직접 입력!
                 </Chip>
               </div>
@@ -108,7 +138,7 @@ export default function PlannerPage() {
                     value={customText}
                     onChange={(e) => setCustomText(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === 'Enter') {
                         e.preventDefault();
                         addCustomTag();
                       }
@@ -137,7 +167,9 @@ export default function PlannerPage() {
 
             {/* STEP 3: 데스크탑에선 전체 폭 차지 */}
             <StepCard title="STEP 3" className="lg:col-span-2">
-              <label className="block text-[18px] md:text-sm font-medium text-[#8A6B52] mb-1">더 바라는 것!</label>
+              <label className="block text-[18px] md:text-sm font-medium text-[#8A6B52] mb-1">
+                더 바라는 것!
+              </label>
               <textarea
                 rows={4}
                 className="w-full rounded-xl border border-[#E6D9CC] bg-white px-3 py-2 text-[18px] resize-none placeholder:text-[#B7A9A0] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_2px_6px_rgba(0,0,0,0.06)] focus:outline-none focus:ring-2 focus:ring-[#F4A259]"

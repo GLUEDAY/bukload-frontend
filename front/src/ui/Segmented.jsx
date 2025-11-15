@@ -10,8 +10,8 @@ export default function Segmented({ options = [], value, onChange }) {
             onClick={() => onChange(opt)}
             className={`rounded-lg px-3 py-2 text-[18px] border transition
               ${active
-                ? "bg-[#F07818] text-white border-[#F07818] shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
-                : "bg-white text-[#6B7280] border-white"}`}
+                ? "bg-[#FF840078] text-[#974E00] border-white"
+                : "bg-white text-[#974E00] border-white"}`}
           >
             {opt}
           </button>

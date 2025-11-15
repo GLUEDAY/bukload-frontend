@@ -5,15 +5,13 @@ import { useLoading } from "../context/LoadingContext";
 import { useAlert } from "../context/AlertContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
-const CHANGE_PW_PATH =
-  import.meta.env.VITE_CHANGE_PASSWORD_PATH || "/auth/change-password";
 
 /**
- * API (명세 반영)
+ * 새 API 명세 기준
  * - GET   /users/me                       : 내 정보 조회
- * - PATCH /users/me                       : 내 정보 부분 수정 { name, birthDate, email }
- * - POST  (env) CHANGE_PW_PATH            : 비번변경 { newPassword, newPasswordConfirm }
- * - 운영 중 loginId 변경/중복확인: 미제공 → UI는 readOnly + 비활성
+ * - PATCH /users/me                       : 내 정보 부분 수정
+ *      { nickname?, preferredTheme?, homeLocation? }
+ * - 비밀번호 변경 / ID 변경 / 중복확인: 명세에 없음 → UI는 안내만
  */
 
 export default function AccountSettingsPage() {
@@ -25,24 +23,27 @@ export default function AccountSettingsPage() {
     name: "",
     birthDate: "",
     email: "",
+    nickname: "",
+    preferredTheme: "",
+    homeLocation: "",
   });
 
+  // 🔧 명세상 PATCH 로 수정 가능한 필드만 따로 관리
   const [editing, setEditing] = useState({
-    name: "",
-    birthDate: "",
-    email: "",
+    nickname: "",
+    preferredTheme: "",
+    homeLocation: "",
   });
 
   const [saving, setSaving] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 비밀번호 변경 모달
+  // 비밀번호 변경 모달 (지금은 “준비 중” 안내용)
   const [pwOpen, setPwOpen] = useState(false);
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
 
-  // 비밀번호 유효성
   const pwValid = useMemo(
     () => /[A-Za-z]/.test(newPw) && /[0-9]/.test(newPw) && newPw.length >= 8,
     [newPw]
@@ -50,11 +51,11 @@ export default function AccountSettingsPage() {
   const pwMatch = useMemo(() => newPw && newPw === newPw2, [newPw, newPw2]);
 
   const edited =
-    editing.name !== me.name ||
-    editing.birthDate !== me.birthDate ||
-    editing.email !== me.email;
+    editing.nickname !== me.nickname ||
+    editing.preferredTheme !== me.preferredTheme ||
+    editing.homeLocation !== me.homeLocation;
 
-  // 초기 로드: 내 정보
+  // 👉 초기 로드: 내 정보 조회
   useEffect(() => {
     withLoading(async () => {
       const res = await fetch(`${API_BASE}/users/me`, {
@@ -66,21 +67,26 @@ export default function AccountSettingsPage() {
       }
       const data = await res.json();
       const birth = (data.birthDate ?? "").slice(0, 10); // yyyy-MM-dd
+
       setMe({
         loginId: data.loginId ?? "",
         name: data.name ?? "",
         birthDate: birth,
         email: data.email ?? "",
+        nickname: data.nickname ?? "",
+        preferredTheme: data.preferredTheme ?? "",
+        homeLocation: data.homeLocation ?? "",
       });
+
       setEditing({
-        name: data.name ?? "",
-        birthDate: birth,
-        email: data.email ?? "",
+        nickname: data.nickname ?? "",
+        preferredTheme: data.preferredTheme ?? "",
+        homeLocation: data.homeLocation ?? "",
       });
     });
-  }, []);
+  }, [withLoading]);
 
-  // 저장
+  // 👉 저장 (PATCH /users/me)
   const onSave = async (e) => {
     e.preventDefault();
     if (!edited || saving) return;
@@ -92,9 +98,9 @@ export default function AccountSettingsPage() {
         method: "PATCH",
         headers: { ...authHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: editing.name,
-          birthDate: editing.birthDate,
-          email: editing.email,
+          nickname: editing.nickname,
+          preferredTheme: editing.preferredTheme,
+          homeLocation: editing.homeLocation,
         }),
       });
 
@@ -111,38 +117,29 @@ export default function AccountSettingsPage() {
     });
   };
 
-  // ID 변경/중복확인: 운영 중 미제공 → 안내만
+  // ID 변경/중복확인: 명세에 없음 → 안내만
   const onCheckId = () =>
-    showAlert("운영 중 ID 변경은 제공하지 않아요. 회원가입에서만 확인합니다.");
+    showAlert("운영 중 ID 변경/중복확인은 제공하지 않아요. 회원가입에서만 확인합니다.");
 
-  // 비밀번호 변경
+  // PW 변경: 아직 명세/백엔드 없음 → 안내만
   const openPw = () => {
     setNewPw("");
     setNewPw2("");
     setPwOpen(true);
   };
 
-  const submitPw = async () => {
-    if (!pwValid) return showAlert("영문/숫자 포함 8자 이상으로 입력해 주세요.");
-    if (!pwMatch) return showAlert("비밀번호가 일치하지 않아요.");
+  const submitPw = () => {
+    if (!pwValid) {
+      showAlert("영문/숫자 포함 8자 이상으로 입력해 주세요.");
+      return;
+    }
+    if (!pwMatch) {
+      showAlert("비밀번호가 일치하지 않아요.");
+      return;
+    }
 
-    await withLoading(async () => {
-      const res = await fetch(`${API_BASE}${CHANGE_PW_PATH}`, {
-        method: "POST",
-        headers: { ...authHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({
-          newPassword: newPw,
-          newPasswordConfirm: newPw2,
-        }),
-      });
-      if (!res.ok) {
-        const err = await safeJson(res);
-        showAlert(err?.message || "비밀번호 변경에 실패했어요.");
-        return;
-      }
-      setPwOpen(false);
-      setSuccessOpen(true); // 비밀번호도 “변경되었습니다” 모달 재사용
-    });
+    showAlert("비밀번호 변경 API는 새 명세에 아직 정의되지 않았어요.\n백엔드 준비 후 연결될 예정입니다.");
+    setPwOpen(false);
   };
 
   return (
@@ -152,8 +149,6 @@ export default function AccountSettingsPage() {
         <section className="mt-6 rounded-2xl border border-[#E6D9CC] bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-[#8A6B52]">계정 설정</h1>
-            {/* 로고 자리 - 필요 시 이미지 넣으세요 */}
-            {/* <img src="/logo-b.png" className="h-8" /> */}
           </div>
 
           <form onSubmit={onSave} className="space-y-4">
@@ -180,7 +175,7 @@ export default function AccountSettingsPage() {
               </div>
             </div>
 
-            {/* PW 변경 버튼 */}
+            {/* PW 변경 버튼 (API 준비 중) */}
             <div>
               <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
                 PW
@@ -201,34 +196,56 @@ export default function AccountSettingsPage() {
               </div>
             </div>
 
-            {/* 이름 */}
+            {/* 이름 (읽기 전용) */}
             <Field
               label="이름"
-              value={editing.name}
-              onChange={(v) => setEditing((s) => ({ ...s, name: v }))}
+              value={me.name}
+              readOnly
+              placeholder=""
             />
 
-            {/* 생년월일 */}
+            {/* 생년월일 (읽기 전용) */}
             <div>
               <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
                 생년월일
               </label>
               <input
                 type="date"
-                value={editing.birthDate}
-                onChange={(e) =>
-                  setEditing((s) => ({ ...s, birthDate: e.target.value }))
-                }
-                className="w-full rounded-xl border border-[#E6D9CC] px-3 py-2 outline-none focus:ring-2 focus:ring-[#F07818]/30"
+                value={me.birthDate}
+                readOnly
+                className="w-full rounded-xl border border-[#E6D9CC] bg-[#F9F7F3] px-3 py-2 text-[#6B7280]"
               />
             </div>
 
-            {/* 이메일 */}
+            {/* 이메일 (읽기 전용) */}
             <Field
               label="이메일"
+              value={me.email}
+              readOnly
               placeholder="example@email.com"
-              value={editing.email}
-              onChange={(v) => setEditing((s) => ({ ...s, email: v }))}
+            />
+
+            {/* 👇 여기부터가 실제로 PATCH 되는 필드들 */}
+
+            <Field
+              label="닉네임"
+              value={editing.nickname}
+              placeholder="프로필에 표시될 이름"
+              onChange={(v) => setEditing((s) => ({ ...s, nickname: v }))}
+            />
+
+            <Field
+              label="테마 선호"
+              value={editing.preferredTheme}
+              placeholder="예: LIGHT / DARK / SYSTEM"
+              onChange={(v) => setEditing((s) => ({ ...s, preferredTheme: v }))}
+            />
+
+            <Field
+              label="기본 지역"
+              value={editing.homeLocation}
+              placeholder="예: 경기 양주시"
+              onChange={(v) => setEditing((s) => ({ ...s, homeLocation: v }))}
             />
 
             {!!errorMsg && (
@@ -251,7 +268,7 @@ export default function AccountSettingsPage() {
         </section>
       </main>
 
-      {/* 비밀번호 변경 모달 */}
+      {/* 비밀번호 변경 모달 (현재는 안내용만) */}
       {pwOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40">
           <div className="w-[90%] max-w-md rounded-2xl border border-[#E6D9CC] bg-white p-5 shadow-lg">
@@ -303,7 +320,7 @@ export default function AccountSettingsPage() {
         </div>
       )}
 
-      {/* 공통 성공 모달 (정보 저장 / 비번 변경 둘 다 사용) */}
+      {/* 공통 성공 모달 (정보 저장 / 추후 비번 변경에도 사용 가능) */}
       {successOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40">
           <div className="w-[90%] max-w-md rounded-2xl border border-[#E6D9CC] bg-white p-6 shadow-lg">
@@ -325,8 +342,8 @@ export default function AccountSettingsPage() {
   );
 }
 
-/* ---------- 작은 UI ---------- */
-function Field({ label, value, onChange, placeholder }) {
+/* ---------- 작은 UI 컴포넌트들 ---------- */
+function Field({ label, value, onChange, placeholder, readOnly = false }) {
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
@@ -335,11 +352,17 @@ function Field({ label, value, onChange, placeholder }) {
       <div className="relative">
         <input
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={readOnly ? undefined : (e) => onChange && onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-[#E6D9CC] px-3 py-2 outline-none focus:ring-2 focus:ring-[#F07818]/30"
+          readOnly={readOnly}
+          className={`w-full rounded-xl border border-[#E6D9CC] px-3 py-2 outline-none
+            ${
+              readOnly
+                ? "bg-[#F9F7F3] text-[#6B7280]"
+                : "focus:ring-2 focus:ring-[#F07818]/30"
+            }`}
         />
-        {value && (
+        {!readOnly && value && onChange && (
           <button
             type="button"
             onClick={() => onChange("")}
@@ -388,4 +411,3 @@ async function safeJson(res) {
     return null;
   }
 }
-

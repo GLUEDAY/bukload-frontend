@@ -4,12 +4,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "../ui/BottomNav";
 import AiHyeonmuImage from "../assets/ai-hyeonmu.png";
 import BackImage from "../assets/back.png";
-import { useCourses } from "../hook/useCourses"; // ✅ 서버에 이미 저장된 코스 목록
-import { useSaveCourse } from "../hook/useAiRecommendation"; // ✅ AI 추천 코스 → 저장용
-
-// 🔗 공통 로딩 / 알럿 컨텍스트
-import { useLoading } from "@/context/LoadingContext";
-import { useAlert } from "@/context/AlertContext";
+import { useCourses } from "../hook/useCourses.js";
+import { useSaveCourse } from "../hook/useAiRecommendation.js"; 
+import { ACCESS_TOKEN_KEY } from "../api/http.js";
+import { useLoading } from "../context/LoadingContext.jsx";
+import { useAlert } from "../context/AlertContext.jsx";
 
 export default function AiCourseListPage() {
   const navigate = useNavigate();
@@ -52,7 +51,15 @@ export default function AiCourseListPage() {
       return;
     }
 
-    // 2) AI 추천 결과로만 존재하는 코스(→ 저장 후 이동)
+    // 2) 아직 서버에 저장 안 된 AI 코스 → 저장 전에 로그인 체크
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token) {
+      showAlert("코스를 저장하려면 로그인이 필요해요.");
+      navigate("/login", { state: { from: "/ai-courses" } });
+      return;
+    }
+
+    // 3) 저장에 필요한 메타 정보 없으면 에러
     if (!meta?.requestId) {
       showAlert(
         "코스 정보를 저장할 수 있는 요청 ID가 없어요. 처음 단계부터 다시 시도해 주세요."

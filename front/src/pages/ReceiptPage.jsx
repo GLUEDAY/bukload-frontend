@@ -4,10 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "../ui/BottomNav";
 import PhotoImage from "../assets/photo.png";
 import BackImage from "../assets/back.png";
-
-// 🔗 공통 로딩 / 알럿 컨텍스트
-import { useLoading } from "@/context/LoadingContext";
-import { useAlert } from "@/context/AlertContext";
+import { ACCESS_TOKEN_KEY } from "../api/http";
+import { useLoading } from "../context/LoadingContext";
+import { useAlert } from "../context/AlertContext";
 
 export default function ReceiptProofPage() {
   const navigate = useNavigate();
@@ -44,15 +43,20 @@ export default function ReceiptProofPage() {
   const canSubmit = !!file && !isSubmitting;
 
   const handleSubmit = async () => {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token) {
+      showAlert("영수증 인증을 하려면 로그인이 필요해요.");
+      navigate("/login", { state: { from: "/receipt-proof" } });
+      return;
+    }
+
     if (!canSubmit) return;
 
     try {
       setIsSubmitting(true);
 
       await withLoading(async () => {
-        // TODO: 서버에서 영수증 인증 API가 나오면 여기서 실제 요청 호출
-        // 예시:
-        // await submitReceipt.mutateAsync({ image: file, amount, paidAt, courseId, placeId });
+        console.log("영수증 더미 제출:", { file, courseId, placeId });
       });
 
       showAlert(
@@ -120,7 +124,9 @@ export default function ReceiptProofPage() {
                     <img src={PhotoImage} alt="사진" className="w-25 h-25 object-contain" />
                   </div>
                   <p className="text-[18px] font-semibold text-[#313131]">영수증 사진 올리기</p>
-                  <p className="text-[12px] text-[#969696]">경기지역화폐로 결제한 영수증을 올려주세요</p>
+                  <p className="text-[12px] text-[#969696]">
+                    경기지역화폐로 결제한 영수증을 올려주세요
+                  </p>
                 </>
               )}
             </button>
@@ -136,7 +142,8 @@ export default function ReceiptProofPage() {
 
           {/* 포인트 안내 문구 */}
           <p className="mt-6 text-[13px] text-[#969696] leading-relaxed text-center">
-            결제 금액의 15%를 <span className="font-semibold">북로드 포인트</span>로 드려요. (최대 10,000P)
+            결제 금액의 15%를 <span className="font-semibold">북로드 포인트</span>로 드려요.
+            (최대 10,000P)
           </p>
         </section>
       </main>

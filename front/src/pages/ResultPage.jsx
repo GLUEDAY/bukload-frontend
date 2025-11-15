@@ -3,9 +3,7 @@ import { useState, useMemo } from "react";
 import BottomNav from "../ui/BottomNav";
 import { useLocation, useNavigate } from "react-router-dom";
 import LogoImage from "../assets/logo.png";
-
-// 🔔 공통 알럿 컨텍스트
-import { useAlert } from "@/context/AlertContext";
+import { useAlert } from "../context/AlertContext.jsx";
 
 const REGION_OPTIONS = ["의정부", "구리", "양주", "동두천"];
 

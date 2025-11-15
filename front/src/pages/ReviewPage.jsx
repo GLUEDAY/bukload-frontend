@@ -4,11 +4,10 @@ import { useRef, useState, useMemo } from "react";
 import BottomNav from "../ui/BottomNav";
 import PhotoImage from "../assets/photo.png";
 import BackImage from "../assets/back.png";
-import { useCreateReview } from "../hook/useReviews";
-
-// 🔗 공통 로딩 / 알럿 컨텍스트
-import { useLoading } from "@/context/LoadingContext";
-import { useAlert } from "@/context/AlertContext";
+import { useCreateReview } from "../hook/useReviews.js";
+import { ACCESS_TOKEN_KEY } from "../api/http.js";
+import { useLoading } from "../context/LoadingContext.jsx";
+import { useAlert } from "../context/AlertContext.jsx";
 
 export default function ReviewRegisterPage() {
   const navigate = useNavigate();
@@ -18,7 +17,6 @@ export default function ReviewRegisterPage() {
   const { withLoading } = useLoading();
   const { showAlert } = useAlert();
 
-  // 코스/장소 식별자: URL 파라미터 우선, 없으면 state
   const courseId = useMemo(
     () => cidParam ?? location.state?.courseId ?? null,
     [cidParam, location.state]
@@ -31,7 +29,7 @@ export default function ReviewRegisterPage() {
   const placeName = location.state?.placeName || "독립 서점 '오래된 미래'";
 
   const fileInputRef = useRef(null);
-  const [previews, setPreviews] = useState([null, null, null]); // dataURL
+  const [previews, setPreviews] = useState([null, null, null]);
   const [activeIndex, setActiveIndex] = useState(null);
   const [content, setContent] = useState("");
 
@@ -56,7 +54,7 @@ export default function ReviewRegisterPage() {
     reader.onload = () => {
       setPreviews((prev) => {
         const next = [...prev];
-        next[activeIndex] = reader.result; // dataURL
+        next[activeIndex] = reader.result;
         return next;
       });
     };
@@ -66,6 +64,14 @@ export default function ReviewRegisterPage() {
   const canSubmit = !!content.trim() && !isSubmitting && !!courseId && !!placeId;
 
   const handleSubmit = async () => {
+    // 로그인 필요
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token) {
+      showAlert("후기를 작성하려면 로그인이 필요해요.");
+      navigate("/login", { state: { from: `/review/${courseId}/${placeId}` } });
+      return;
+    }
+
     if (!canSubmit) {
       if (!courseId || !placeId) {
         showAlert("코스/장소 정보가 없어 후기를 보낼 수 없어요.");
@@ -103,13 +109,17 @@ export default function ReviewRegisterPage() {
             onClick={() => navigate(-1)}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5"
           >
-            <img src={BackImage} alt="뒤로가기" className="w-25 h-25 sm:w-6 sm:h-6 object-contain" />
+            <img
+              src={BackImage}
+              alt="뒤로가기"
+              className="w-25 h-25 sm:w-6 sm:h-6 object-contain"
+            />
           </button>
           <div className="flex-1" />
         </div>
       </header>
 
-       {/* 본문 */}
+      {/* 본문 */}
       <main className="flex-1 px-4 pb-24">
         <section className="max-w-[360px] mx-auto">
           <h1 className="text-[32px] font-semibold text-[#313131]">후기 등록하기</h1>
@@ -138,7 +148,11 @@ export default function ReviewRegisterPage() {
                   ) : idx === 2 ? (
                     <span className="text-5xl sm:text-6xl text-[#D0D0D0]">+</span>
                   ) : (
-                    <img src={PhotoImage} alt="포토" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                    <img
+                      src={PhotoImage}
+                      alt="포토"
+                      className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                    />
                   )}
                 </button>
                 {previews[idx] && (
@@ -182,7 +196,8 @@ export default function ReviewRegisterPage() {
             />
             {!courseId || !placeId ? (
               <p className="mt-2 text-xs text-red-500">
-                코스/장소 정보가 없어 제출할 수 없어요. 상세 페이지에서 후기 버튼으로 들어와 주세요.
+                코스/장소 정보가 없어 제출할 수 없어요. 상세 페이지에서 후기 버튼으로
+                들어와 주세요.
               </p>
             ) : null}
           </div>
@@ -197,7 +212,9 @@ export default function ReviewRegisterPage() {
             onClick={handleSubmit}
             disabled={!canSubmit}
             className={`w-full h-[50px] sm:h-[55px] rounded-[10px] text-base sm:text-[18px] font-semibold ${
-              canSubmit ? "bg-[#FF8400] text-white" : "bg-[#FFD3A8] text-white/80 cursor-not-allowed"
+              canSubmit
+                ? "bg-[#FF8400] text-white"
+                : "bg-[#FFD3A8] text-white/80 cursor-not-allowed"
             }`}
           >
             {isSubmitting ? "제출 중..." : "제출하고 포인트 받기"}

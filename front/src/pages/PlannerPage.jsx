@@ -1,23 +1,20 @@
 // src/pages/PlannerPage.jsx
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+
 import Header from "../ui/Header";
 import StepCard from "../ui/StepCard";
 import Segmented from "../ui/Segmented";
 import Chip from "../ui/Chip";
 import BottomNav from "../ui/BottomNav";
-import { useNavigate } from "react-router-dom";
 import MapImage from "../assets/map.png";
-
-// 🔗 AI 추천 훅들
 import {
   useCreateTravelRequest,
   useRecommendRegion,
   useRecommendCourses,
-} from "../hook/useAiRecommendation";
-
-// 🔗 공통 로딩 / 알럿 컨텍스트
-import { useLoading } from "@/context/LoadingContext";
-import { useAlert } from "@/context/AlertContext";
+} from "../hook/useAiRecommendation.js";
+import { useLoading } from "../context/LoadingContext.jsx";
+import { useAlert } from "../context/AlertContext.jsx";
 
 const DURATIONS = ["당일치기", "1박 2일", "2박 3일", "3박 4일"];
 const TAGS = ["휴식 #힐링", "맛집 #로컬푸드", "포토 #인생샷", "액티비티 #도전", "문화 #전시", "쇼핑"];
@@ -55,7 +52,7 @@ export default function PlannerPage() {
 
   const isSubmitting = createReq.isPending || recRegion.isPending || recCourses.isPending;
 
-  // UI 값 → API payload 매핑
+
   const travelDays = useMemo(() => {
     if (duration === "당일치기") return 1;
     if (duration.includes("1박")) return 2;
@@ -77,23 +74,21 @@ export default function PlannerPage() {
 
     try {
       await withLoading(async () => {
-        // 1) 여행 요청 생성 (createTravelRequest → number(requestId) 반환)
+        // 1) 여행 요청 생성 → requestId 숫자 반환
         const requestId = await createReq.mutateAsync({
-          themeId: 1, // 필요시 선택값으로 바꿔도 됨
+          themeId: 1, 
           departureLocation: departure || "의정부역",
           travelDays,
-          budget: 50000, // TODO: 예산 입력 UI 만들면 연결
+          budget: 50000, 
           style: selectedTags.join(", "),
           companions,
           additionalRequest: freeText,
-          // gender, birthDate 등은 로그인/프로필 연동 시에 쓰면 됨
-          gender: "F",
-          birthDate: "1999-01-01",
+          gender: "F", 
+          birthDate: "1999-01-01", 
         });
 
         // 2) 지역 추천
         const regionRes = await recRegion.mutateAsync(requestId);
-        // 명세: { region, anchorId, comment, tags }
         const regionName = regionRes?.region || "의정부";
         const anchorId = regionRes?.anchorId;
 

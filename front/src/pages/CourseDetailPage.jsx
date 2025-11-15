@@ -10,15 +10,15 @@ import {
   useAddSegment,
   useDeleteSegment,
   useSaveCourseSegments,
-} from "../hook/useCourses";
+} from "../hook/useCourses.js";
 
-// 🔗 공통 로딩 / 알럿 컨텍스트
-import { useLoading } from "@/context/LoadingContext";
-import { useAlert } from "@/context/AlertContext";
+import { ACCESS_TOKEN_KEY } from "../api/http.js";
+import { useLoading } from "../context/LoadingContext.jsx";
+import { useAlert } from "../context/AlertContext.jsx";
 
 export default function CourseDetailPage() {
   const navigate = useNavigate();
-  const { id } = useParams(); // /courses/:id (SavedCoursePage와 맞춤)
+  const { id } = useParams(); // /course/:id
   const courseId = Number(id);
 
   const { withLoading } = useLoading();
@@ -67,7 +67,7 @@ export default function CourseDetailPage() {
   // 드래그 인덱스
   const [dragIndex, setDragIndex] = useState(null);
 
-  // 지도 렌더링: 실제 코스 좌표 기반으로 polyline + 마커
+
   useEffect(() => {
     const init = () => {
       const { kakao } = window;
@@ -154,7 +154,6 @@ export default function CourseDetailPage() {
     };
   }, [places]);
 
-  // ===== 편집 동작 =====
 
   // 세그먼트 삭제(서버 반영)
   const handleDeletePlace = (segmentId) => {
@@ -165,7 +164,6 @@ export default function CourseDetailPage() {
     });
   };
 
-  // 세그먼트 추가(서버 반영) – 지금은 prompt로 placeId 만 입력
   const handleAddPlace = async () => {
     const name = prompt(
       "추가할 장소의 placeId(검색으로 얻은 ID)를 입력해주세요."
@@ -177,7 +175,7 @@ export default function CourseDetailPage() {
       { placeId: name, orderNo },
       {
         onSuccess: () => {
-          // invalidate되어 목록/지도 업데이트됨
+
         },
       }
     );
@@ -194,10 +192,10 @@ export default function CourseDetailPage() {
       return next.map((p, i) => ({ ...p, orderNo: i + 1 }));
     });
     setDragIndex(null);
-    // 실제 순서 저장은 저장 버튼에서 처리
+    
   };
 
-  // 저장 버튼 동작: 현재 places 순서대로 segment id 배열 만들어서 서버에 저장
+
   const handleSave = async () => {
     if (!places || places.length === 0) {
       showAlert("저장할 장소가 없습니다.");
@@ -219,6 +217,41 @@ export default function CourseDetailPage() {
         "코스 저장 중 오류가 발생했어요.";
       showAlert(msg);
     }
+  };
+
+  // ===== 후기 / 영수증 버튼용 로그인 체크 =====
+  const handleClickReview = (place) => {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token) {
+      showAlert("후기 등록은 로그인 후 이용할 수 있어요.");
+      navigate("/login", {
+        state: { from: `/review/${courseId}/${place.placeId}` },
+      });
+      return;
+    }
+
+    navigate(`/review/${courseId}/${place.placeId}`, {
+      state: { placeName: place.name, courseId, placeId: place.placeId },
+    });
+  };
+
+  const handleClickReceipt = (place) => {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token) {
+      showAlert("영수증 인증은 로그인 후 이용할 수 있어요.");
+      navigate("/login", {
+        state: { from: "/receipt-proof" },
+      });
+      return;
+    }
+
+    navigate("/receipt-proof", {
+      state: {
+        courseId,
+        placeId: place.placeId,
+        placeName: place.name,
+      },
+    });
   };
 
   // ===== 로딩/에러 가드 =====
@@ -390,11 +423,7 @@ export default function CourseDetailPage() {
                         <div className="flex flex-wrap gap-2 text-[11px] sm:text-[13px]">
                           <button
                             type="button"
-                            onClick={() =>
-                              navigate(`/review/${courseId}/${p.placeId}`, {
-                                state: { placeName: p.name },
-                              })
-                            }
+                            onClick={() => handleClickReview(p)}
                             className="px-3 py-[5px] rounded-full bg-[#FFA641] text-white font-semibold"
                           >
                             후기
@@ -408,15 +437,7 @@ export default function CourseDetailPage() {
 
                           <button
                             type="button"
-                            onClick={() =>
-                              navigate("/receipt-proof", {
-                                state: {
-                                  courseId,
-                                  placeId: p.placeId,
-                                  placeName: p.name,
-                                },
-                              })
-                            }
+                            onClick={() => handleClickReceipt(p)}
                             className="px-3 py-[5px] rounded-full bg-[#3A60DD] text-white font-semibold"
                           >
                             영수증 인증

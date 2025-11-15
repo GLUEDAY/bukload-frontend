@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import DeleteImage from "../assets/delete.png";
 
 // 🔗 공통 알럿 컨텍스트
-import { useAlert } from "@/context/AlertContext";
+import { useAlert } from "../context/AlertContext.jsx";
 
 export default function AddPlacePage() {
   const navigate = useNavigate();
@@ -46,14 +46,17 @@ export default function AddPlacePage() {
   const mapRef = useRef(null);
 
   // 장소 선택 시 동작
-  const handleAddPlace = useCallback((place) => {
-    console.log("선택한 장소:", place);
-    showAlert(`'${place.name}'를 코스에 추가했어요!`);
+  const handleAddPlace = useCallback(
+    (place) => {
+      console.log("선택한 장소:", place);
+      showAlert(`'${place.name}'를 코스에 추가했어요!`);
 
-    // 실제로 코스 수정 페이지에 반영하려면 navigate로 state 넘기기
-    // 예시:
-    // navigate(-1, { state: { addedPlace: place } });
-  }, [showAlert]);
+      // 실제로 코스 수정 페이지에 반영하려면 navigate로 state 넘기기
+      // 예시:
+      // navigate(-1, { state: { addedPlace: place } });
+    },
+    [showAlert]
+  );
 
   // 지도 탭이 켜졌을 때 카카오 지도 로드
   useEffect(() => {
@@ -140,10 +143,7 @@ export default function AddPlacePage() {
                 placeholder="추가할 장소의 이름을 검색하세요"
                 className="flex-1 bg-transparent text-[16px] placeholder:text-[#00000052] focus:outline-none"
               />
-              <button
-                type="button"
-                className="ml-2"
-              >
+              <button type="button" className="ml-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="w-5 h-5"

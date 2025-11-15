@@ -2,15 +2,13 @@
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../ui/BottomNav";
 import BackImage from "../assets/back.png";
-import { useCourses } from "../hook/useCourses";
 import FileImage from "../assets/file.png";
-
-// 🔗 공통 알럿 컨텍스트
-import { useAlert } from "@/context/AlertContext";
+import { useCourses } from "../hook/useCourses.js";
+import { useAlert } from "../context/AlertContext.jsx";
 
 export default function SavedCoursePage() {
   const navigate = useNavigate();
-  const { data: courses, isLoading, error } = useCourses(); // 서버에서 내 코스 목록
+  const { data: courses, isLoading, error } = useCourses(); 
   const { showAlert } = useAlert();
 
   const handleClick = (course) => {
@@ -19,7 +17,7 @@ export default function SavedCoursePage() {
       showAlert("코스 ID가 없어 상세로 이동할 수 없어요.");
       return;
     }
-    navigate(`/courses/${id}`, {
+    navigate(`/course/${id}`, {
       state: {
         region: course.region,
         title: course.title,
@@ -60,7 +58,7 @@ export default function SavedCoursePage() {
         )}
         {!isLoading && !error && (
           <>
-            {(!courses || courses.length === 0) ? (
+            {!courses || courses.length === 0 ? (
               <p className="py-12 text-center text-sm text-gray-500">
                 저장된 코스가 없어요.
               </p>
@@ -80,7 +78,9 @@ export default function SavedCoursePage() {
                           src={course.thumbnailUrl}
                           alt={course.title}
                           className="w-full h-full object-cover"
-                          onError={(e)=>{ e.currentTarget.src="/images/sample-course-thumbnail.jpg"; }}
+                          onError={(e) => {
+                            e.currentTarget.src = "/images/sample-course-thumbnail.jpg";
+                          }}
                         />
                       ) : (
                         <span className="text-2xl text-white">🏙️</span>
@@ -96,7 +96,8 @@ export default function SavedCoursePage() {
                         <span className="text-[18px] leading-none">⭐</span>
                       </div>
                       <p className="mt-1 text-[13px] text-[#B2B2B2]">
-                        {(course.region ?? "지역 미정")}{course.type ? ` | ${course.type}` : ""}
+                        {(course.region ?? "지역 미정")}
+                        {course.type ? ` | ${course.type}` : ""}
                       </p>
                     </div>
                   </button>

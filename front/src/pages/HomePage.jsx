@@ -1,9 +1,23 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAlert } from "../context/AlertContext";
 import bukloadLogo from "../assets/png/bukload.png";
 
 export default function HomePage() {
   const { showAlert } = useAlert();
+  const navigate = useNavigate();
+
+  const handleMyPageClick = () => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      // 토큰 없으면 로그인 페이지로
+      navigate("/login");
+      return;
+    }
+
+    // 토큰 있으면 마이페이지로
+    navigate("/mypage");
+  };
 
   return (
     <div style={styles.container}>
@@ -29,6 +43,7 @@ export default function HomePage() {
             border: "none",
             cursor: "pointer",
           }}
+          type="button"
         >
           <p style={{ ...styles.cardTitle, color: "#8A6B52" }}>인기 코스 보기</p>
           <p style={{ ...styles.cardDesc, color: "#A78B6F" }}>
@@ -36,15 +51,22 @@ export default function HomePage() {
           </p>
         </button>
 
-        <Link
-          to="/mypage"
-          style={{ ...styles.card, backgroundColor: "#FFF7ED" }}
+        {/* 마이페이지: 토큰 여부에 따라 login / mypage로 이동 */}
+        <button
+          onClick={handleMyPageClick}
+          style={{
+            ...styles.card,
+            backgroundColor: "#FFF7ED",
+            border: "none",
+            cursor: "pointer",
+          }}
+          type="button"
         >
           <p style={{ ...styles.cardTitle, color: "#8A6B52" }}>마이페이지</p>
           <p style={{ ...styles.cardDesc, color: "#A78B6F" }}>
             내가 저장한 코스 관리
           </p>
-        </Link>
+        </button>
       </div>
     </div>
   );

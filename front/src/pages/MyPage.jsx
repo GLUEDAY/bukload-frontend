@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../ui/Header";
 import BottomNav from "../ui/BottomNav";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useAlert } from "../context/AlertContext"; 
+import { useAlert } from "../context/AlertContext";
 
 const API = import.meta.env.VITE_API_BASE_URL || "/api";
+
 const authHeader = () => {
   const t = localStorage.getItem("accessToken");
   return t ? { Authorization: `Bearer ${t}` } : {};
@@ -13,52 +14,83 @@ const authHeader = () => {
 
 export default function MyPage() {
   const nav = useNavigate();
-  const { showAlert } = useAlert(); 
+  const { showAlert } = useAlert();
 
   const [points, setPoints] = useState({ total: 0, loading: true });
   const [saved, setSaved] = useState({ list: [], loading: true });
 
   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    // 아예 토큰이 없으면 마이페이지 접근 불가 → 로그인으로 보냄
+    if (!token) {
+      showAlert("로그인이 필요한 서비스입니다.");
+      nav("/login", { replace: true });
+      return;
+    }
+
+    // 새 명세: GET /points/summary → { totalPoint }
     (async () => {
       try {
-        const r = await fetch(`${API}/points/summary`, { headers: authHeader() });
+        const r = await fetch(`${API}/points/summary`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeader(),
+          },
+        });
+
+        if (r.status === 401 || r.status === 403) {
+          // 토큰 만료 or 무효 → 로그인 화면으로
+          showAlert("로그인 세션이 만료되었어요. 다시 로그인 해주세요.");
+          nav("/login", { replace: true });
+          return;
+        }
+
+        if (!r.ok) {
+          throw new Error("포인트 요약 조회 실패");
+        }
+
         const j = await r.json();
         setPoints({ total: j.totalPoint ?? 0, loading: false });
-      } catch {
-        setPoints({ total: 1500, loading: false });
+      } catch (e) {
+        console.error(e);
+        setPoints({ total: 0, loading: false });
       }
     })();
 
+    // 🔹 새 명세: GET /me/saved-courses → 저장된 코스 목록
     (async () => {
       try {
-        const r = await fetch(`${API}/me/saved-courses`, { headers: authHeader() });
-        const j = await r.json();
-        setSaved({ list: Array.isArray(j) ? j : [], loading: false });
-      } catch {
-        setSaved({
-          list: [
-            {
-              id: 101,
-              title: "로컬 맛집 완전 정복 코스",
-              region: "의정부",
-              dayTag: "당일치기",
-              thumb: "/map-placeholder.png",
-            },
-            {
-              id: 102,
-              title: "감성 카페 & 독립 서점 코스",
-              region: "파주",
-              dayTag: "반나절",
-              thumb: "/map-placeholder.png",
-            },
-          ],
-          loading: false,
+        const r = await fetch(`${API}/me/saved-courses`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeader(),
+          },
         });
+
+        if (r.status === 401 || r.status === 403) {
+          showAlert("로그인 세션이 만료되었어요. 다시 로그인 해주세요.");
+          nav("/login", { replace: true });
+          return;
+        }
+
+        if (!r.ok) {
+          throw new Error("저장된 코스 목록 조회 실패");
+        }
+
+        const j = await r.json();
+        const list = Array.isArray(j) ? j : [];
+
+        setSaved({ list, loading: false });
+      } catch (e) {
+        console.error(e);
+        setSaved({ list: [], loading: false });
       }
     })();
-  }, []);
+  }, [nav, showAlert]);
 
   const goBack = () => nav(-1);
+
   const logout = () => {
     localStorage.removeItem("accessToken");
     nav("/login");
@@ -68,7 +100,11 @@ export default function MyPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#FFF6ED] to-[#FDF7F1]">
       <Header
         left={
-          <button onClick={goBack} className="p-2 rounded-full hover:bg-black/5" aria-label="뒤로가기">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-full hover:bg-black/5"
+            aria-label="뒤로가기"
+          >
             <ChevronLeft className="w-5 h-5 text-[#8A6B52]" />
           </button>
         }
@@ -85,10 +121,11 @@ export default function MyPage() {
               <span className="text-[#F07818]">P</span>
             </div>
 
-            {/* ✅ 문자열만 넘기면 AlertContext가 처리 */}
             <button
               onClick={() =>
-                showAlert("포인트 스토어는 준비 중이에요! 다음 업데이트에서 만나요 :)")
+                showAlert(
+                  "포인트 스토어는 준비 중이에요! 다음 업데이트에서 만나요 :)"
+                )
               }
               className="mt-3 text-xs px-3 py-2 rounded-full border border-[#E6D9CC] hover:bg-[#FFF5EC]"
             >
@@ -101,7 +138,10 @@ export default function MyPage() {
         <section className="mt-8">
           <div className="flex items-center justify-between">
             <h3 className="text-[#8A6B52] text-sm font-semibold">저장된 코스</h3>
-            <Link to="/saved-courses" className="flex items-center text-xs text-[#8A6B52] hover:underline">
+            <Link
+              to="/saved-courses"
+              className="flex items-center text-xs text-[#8A6B52] hover:underline"
+            >
               전체보기 <ChevronRight className="w-4 h-4 ml-0.5" />
             </Link>
           </div>
@@ -129,7 +169,9 @@ export default function MyPage() {
                   className="w-12 h-12 rounded-lg object-cover border border-[#E6D9CC]"
                 />
                 <div className="flex-1">
-                  <p className="text-[13px] font-semibold text-[#2A2A2A] line-clamp-1">{c.title}</p>
+                  <p className="text-[13px] font-semibold text-[#2A2A2A] line-clamp-1">
+                    {c.title}
+                  </p>
                   <p className="mt-0.5 text-[11px] text-[#8A6B52]">
                     {c.region} · {c.dayTag}
                   </p>

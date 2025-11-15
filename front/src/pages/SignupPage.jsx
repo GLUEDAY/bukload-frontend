@@ -30,7 +30,10 @@ export default function SignupPage() {
     [form.loginId]
   );
   const pwValid = useMemo(
-    () => /[A-Za-z]/.test(form.password) && /[0-9]/.test(form.password) && form.password.length >= 8,
+    () =>
+      /[A-Za-z]/.test(form.password) &&
+      /[0-9]/.test(form.password) &&
+      form.password.length >= 8,
     [form.password]
   );
   const pwMatch = useMemo(
@@ -38,30 +41,35 @@ export default function SignupPage() {
     [form.password, form.passwordConfirm]
   );
   const nameValid = useMemo(() => form.name.trim().length >= 1, [form.name]);
-  const birthValid = useMemo(() => /^\d{4}-\d{2}-\d{2}$/.test(form.birthDate), [form.birthDate]);
+  const birthValid = useMemo(
+    () => /^\d{4}-\d{2}-\d{2}$/.test(form.birthDate),
+    [form.birthDate]
+  );
   const emailValid = useMemo(
-    () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && form.email.length <= 120,
+    () =>
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) &&
+      form.email.length <= 120,
     [form.email]
   );
 
-  const allValid = idValid && pwValid && pwMatch && nameValid && birthValid && emailValid;
+  const allValid =
+    idValid && pwValid && pwMatch && nameValid && birthValid && emailValid;
 
-  const onChange = (key) => (e) => setForm((s) => ({ ...s, [key]: e.target.value }));
-  const clearField = (key) => () => setForm((s) => ({ ...s, [key]: "" }));
+  const onChange = (key) => (e) =>
+    setForm((s) => ({ ...s, [key]: e.target.value }));
+  const clearField = (key) => () =>
+    setForm((s) => ({ ...s, [key]: "" }));
 
-  // 아이디 중복확인(옵션: VITE_SIGNUP_ID_CHECK_PATH가 있을 때만 실제 호출)
-  const checkIdAvailability = async () => {
-    const path = import.meta.env.VITE_SIGNUP_ID_CHECK_PATH; // 예: /auth/check-loginId?loginId=
-    if (!path) return showAlert("중복확인 API 준비 중입니다");
-    if (!idValid) return showAlert("아이디 형식을 확인해 주세요");
-
-    await withLoading(async () => {
-      const res = await fetch(`${API_BASE}${path}${encodeURIComponent(form.loginId)}`, {
-        credentials: "include",
-      });
-      if (res.ok) showAlert("사용 가능한 아이디입니다");
-      else showAlert("이미 사용 중인 아이디예요");
-    });
+  // 🔹 아이디 중복확인 버튼
+  //    → 별도 API 없이, /auth/signup 에서 자동으로 처리된다는 안내만 보여줌
+  const checkIdAvailability = () => {
+    if (!idValid) {
+      showAlert("아이디 형식을 먼저 확인해 주세요.");
+      return;
+    }
+    showAlert(
+      "회원가입을 진행하면 /auth/signup 에서 자동으로 아이디 중복을 확인해요.\n이미 사용 중인 아이디면 오류 메시지가 표시됩니다 :)"
+    );
   };
 
   const onSubmit = async (e) => {
@@ -86,7 +94,13 @@ export default function SignupPage() {
 
       if (!res.ok) {
         const err = await safeJson(res);
-        setApiError(err?.message || "회원가입에 실패했어요. 입력값을 확인해 주세요.");
+
+        // 🔹 여기서 중복 아이디 에러를 좀 더 친절하게 보여주고 싶으면
+        //    백엔드 에러 메시지/코드에 맞춰 조건 분기 추가하면 됨.
+        setApiError(
+          err?.message ||
+            "회원가입에 실패했어요. 입력값을 확인해 주세요."
+        );
         setSubmitting(false);
         return;
       }
@@ -108,14 +122,20 @@ export default function SignupPage() {
       <Header title="회원가입" />
       <main className="mx-auto max-w-[420px] px-4 pb-16">
         <section className="mt-6 rounded-2xl border border-[#E6D9CC] bg-white p-5 shadow-sm">
-          <h1 className="mb-5 text-xl font-semibold text-[#8A6B52]">회원가입</h1>
+          <h1 className="mb-5 text-xl font-semibold text-[#8A6B52]">
+            회원가입
+          </h1>
 
           <form onSubmit={onSubmit} className="space-y-4">
             {/* ID */}
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-medium text-[#8A6B52]">ID 입력</label>
-                <span className="text-[11px] text-[#2F6D62]">아이디 중복 확인</span>
+                <label className="text-sm font-medium text-[#8A6B52]">
+                  ID 입력
+                </label>
+                <span className="text-[11px] text-[#2F6D62]">
+                  아이디 중복 확인
+                </span>
               </div>
               <div className="flex gap-2">
                 <input
@@ -157,7 +177,9 @@ export default function SignupPage() {
               onClear={clearField("passwordConfirm")}
             />
             {!pwMatch && form.passwordConfirm && (
-              <p className="text-xs text-[#C62828]">비밀번호가 일치하지 않아요.</p>
+              <p className="text-xs text-[#C62828]">
+                비밀번호가 일치하지 않아요.
+              </p>
             )}
 
             {/* 이름 */}
@@ -170,7 +192,9 @@ export default function SignupPage() {
 
             {/* 생년월일 */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#8A6B52]">생년월일</label>
+              <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
+                생년월일
+              </label>
               <input
                 type="date"
                 value={form.birthDate}
@@ -178,7 +202,9 @@ export default function SignupPage() {
                 className="w-full rounded-xl border border-[#E6D9CC] px-3 py-2 outline-none focus:ring-2 focus:ring-[#F07818]/30"
               />
               {!birthValid && form.birthDate && (
-                <p className="mt-1 text-xs text-[#C62828]">yyyy-MM-dd 형식</p>
+                <p className="mt-1 text-xs text-[#C62828]">
+                  yyyy-MM-dd 형식
+                </p>
               )}
             </div>
 
@@ -191,10 +217,14 @@ export default function SignupPage() {
               onClear={clearField("email")}
             />
             {!emailValid && form.email && (
-              <p className="text-xs text-[#C62828]">이메일 형식을 확인해 주세요.</p>
+              <p className="text-xs text-[#C62828]">
+                이메일 형식을 확인해 주세요.
+              </p>
             )}
 
-            {!!apiError && <p className="text-sm text-[#C62828]">{apiError}</p>}
+            {!!apiError && (
+              <p className="text-sm text-[#C62828]">{apiError}</p>
+            )}
 
             {!allValid && (
               <p className="text-xs text-[#C62828]">
@@ -206,7 +236,11 @@ export default function SignupPage() {
               type="submit"
               disabled={!allValid || submitting}
               className={`mt-2 w-full rounded-2xl px-4 py-3 font-semibold text-white transition shadow
-                ${!allValid || submitting ? "bg-[#8A6B52]/40" : "bg-[#F07818] hover:brightness-110"}`}
+                ${
+                  !allValid || submitting
+                    ? "bg-[#8A6B52]/40"
+                    : "bg-[#F07818] hover:brightness-110"
+                }`}
             >
               {submitting ? "가입 중..." : "가입하기"}
             </button>
@@ -218,8 +252,12 @@ export default function SignupPage() {
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-[90%] max-w-md rounded-2xl border border-[#E6D9CC] bg-white p-6 shadow-lg">
-            <p className="mb-2 text-lg font-semibold text-[#2F6D62]">회원가입 성공!</p>
-            <p className="mb-5 text-sm text-[#6B7280]">이제 추천 코스를 저장하고, 포인트를 적립해 보세요.</p>
+            <p className="mb-2 text-lg font-semibold text-[#2F6D62]">
+              회원가입 성공!
+            </p>
+            <p className="mb-5 text-sm text-[#6B7280]">
+              이제 추천 코스를 저장하고, 포인트를 적립해 보세요.
+            </p>
             <div className="flex justify-end">
               <button
                 onClick={onConfirmSuccess}
@@ -235,10 +273,20 @@ export default function SignupPage() {
   );
 }
 
-function Field({ label, value, onChange, type = "text", placeholder, onClear }) {
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  onClear,
+  hint,
+}) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-[#8A6B52]">{label}</label>
+      <label className="mb-1 block text-sm font-medium text-[#8A6B52]">
+        {label}
+      </label>
       <div className="relative">
         <input
           type={type}
@@ -249,6 +297,11 @@ function Field({ label, value, onChange, type = "text", placeholder, onClear }) 
         />
         {value && <ClearBtn onClick={onClear} />}
       </div>
+      {hint && (
+        <p className="mt-1 text-xs text-[#8A6B52]/70">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -267,5 +320,9 @@ function ClearBtn({ onClick }) {
 }
 
 async function safeJson(res) {
-  try { return await res.json(); } catch { return null; }
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
 }

@@ -9,6 +9,7 @@ export default function BottomNav() {
   if (HIDE_ROUTES.includes(pathname)) return null;
 
   return (
+
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#E6D9CC] bg-white/95 backdrop-blur-sm">
       <div className="mx-auto max-w-md flex items-center justify-around py-2">
         {/* 홈 */}
@@ -52,6 +53,7 @@ export default function BottomNav() {
             마이페이지
           </span>
         </Link>
+
       </div>
 
       {/* iOS 안전영역 여백 */}

@@ -1,3 +1,4 @@
+
 import { Suspense } from "react";
 import {
   BrowserRouter as Router,
@@ -96,5 +97,6 @@ export default function App() {
         </AlertProvider>
       </LoadingProvider>
     </Router>
+
   );
 }

@@ -25,13 +25,22 @@ export default function HomePage() {
       <p style={styles.subtitle}>나만의 경기 북부 여행 BukLoad</p>
 
       <div style={styles.cardContainer}>
-        <Link
-          to="/planner"
-          style={{ ...styles.card, backgroundColor: "#F07818", color: "#fff" }}
+
+        <button
+          onClick={() => {
+            const token = localStorage.getItem("accessToken");
+            if (!token) {
+              navigate("/login");
+            } else {
+              navigate("/planner");
+            }
+          }}
+          style={{ ...styles.card, backgroundColor: "#F07818", color: "#fff", border: "none", cursor: "pointer" }}
+          type="button"
         >
           <p style={styles.cardTitle}>코스 생성하기</p>
           <p style={styles.cardDesc}>AI로 나만의 여행 코스 만들기</p>
-        </Link>
+        </button>
 
         <button
           onClick={() =>

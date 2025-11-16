@@ -1,19 +1,54 @@
 // src/pages/AccountSettingsPage.jsx
 import { useEffect, useMemo, useState } from "react";
-import Header from "../ui/Header";
-import { useLoading } from "../context/LoadingContext";
-import { useAlert } from "../context/AlertContext";
+// import Header from "../ui/Header";
+// import { useLoading } from "../context/LoadingContext";
+// import { useAlert } from "../context/AlertContext";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+// const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE = ""; // Vite/import.meta.env not available in this environment
 
 /**
  * 새 API 명세 기준
  * - GET   /users/me                       : 내 정보 조회
  * - PATCH /users/me                       : 내 정보 부분 수정
- *      { nickname?, preferredTheme?, homeLocation? }
+ * { nickname?, preferredTheme?, homeLocation? }
  * - 비밀번호 변경 / ID 변경 / 중복확인: 명세에 없음 → UI는 안내만
  */
 
+// --- 누락된 의존성 Mock 구현 ---
+
+// Header 컴포넌트 Mock
+function Header({ title }) {
+  return (
+    <header className="w-full bg-white p-4 text-center shadow-md sticky top-0 z-10">
+      <h1 className="text-xl font-bold text-[#2F6D62]">{title}</h1>
+    </header>
+  );
+}
+
+// useLoading 컨텍스트 Hook Mock
+const useLoading = () => {
+  // Mock: 로딩 함수는 그냥 바로 실행
+  const withLoading = async (fn) => {
+    try {
+      await fn();
+    } catch (error) {
+      console.error("withLoading 에러:", error);
+    }
+  };
+  return { withLoading };
+};
+
+// useAlert 컨텍스트 Hook Mock
+const useAlert = () => {
+  // Mock: showAlert는 console.log로 대체 (alert() 사용 금지)
+  const showAlert = (message) => {
+    console.log("showAlert:", message);
+  };
+  return { showAlert };
+};
+
+// ---
 export default function AccountSettingsPage() {
   const { withLoading } = useLoading();
   const { showAlert } = useAlert();
@@ -119,7 +154,8 @@ export default function AccountSettingsPage() {
 
   // ID 변경/중복확인: 명세에 없음 → 안내만
   const onCheckId = () =>
-    showAlert("운영 중 ID 변경/중복확인은 제공하지 않아요. 회원가입에서만 확인합니다.");
+    // showAlert("운영 중 ID 변경/중복확인은 제공하지 않아요. 회원가입에서만 확인합니다.");
+    console.log("Alert: 운영 중 ID 변경/중복확인은 제공하지 않아요. 회원가입에서만 확인합니다.");
 
   // PW 변경: 아직 명세/백엔드 없음 → 안내만
   const openPw = () => {
@@ -130,15 +166,18 @@ export default function AccountSettingsPage() {
 
   const submitPw = () => {
     if (!pwValid) {
-      showAlert("영문/숫자 포함 8자 이상으로 입력해 주세요.");
+      // showAlert("영문/숫자 포함 8자 이상으로 입력해 주세요.");
+      console.log("Alert: 영문/숫자 포함 8자 이상으로 입력해 주세요.");
       return;
     }
     if (!pwMatch) {
-      showAlert("비밀번호가 일치하지 않아요.");
+      // showAlert("비밀번호가 일치하지 않아요.");
+      console.log("Alert: 비밀번호가 일치하지 않아요.");
       return;
     }
 
-    showAlert("비밀번호 변경 API는 새 명세에 아직 정의되지 않았어요.\n백엔드 준비 후 연결될 예정입니다.");
+    // showAlert("비밀번호 변경 API는 새 명세에 아직 정의되지 않았어요.\n백엔드 준비 후 연결될 예정입니다.");
+    console.log("Alert: 비밀번호 변경 API는 새 명세에 아직 정의되지 않았어요.\n백엔드 준비 후 연결될 예정입니다.");
     setPwOpen(false);
   };
 
@@ -234,12 +273,12 @@ export default function AccountSettingsPage() {
               onChange={(v) => setEditing((s) => ({ ...s, nickname: v }))}
             />
 
-            <Field
-              label="테마 선호"
-              value={editing.preferredTheme}
-              placeholder="예: LIGHT / DARK / SYSTEM"
-              onChange={(v) => setEditing((s) => ({ ...s, preferredTheme: v }))}
-            />
+{/* <Field
+  label="테마 선호"
+  value={editing.preferredTheme}
+  placeholder="예: LIGHT / DARK / SYSTEM"
+  onChange={(v) => setEditing((s) => ({ ...s, preferredTheme: v }))}
+/> */}
 
             <Field
               label="기본 지역"
@@ -255,7 +294,7 @@ export default function AccountSettingsPage() {
             <button
               type="submit"
               disabled={!edited || saving}
-              className={`mt-2 w-full rounded-2xl px-4 py-3 font-semibold text-white shadow transition
+              className={`mt-2 w-full rounded-2xl px-4 py-3 font-semibold text-white shadow transition \
                 ${
                   !edited || saving
                     ? "bg-[#2F6D62]/30"
@@ -355,7 +394,7 @@ function Field({ label, value, onChange, placeholder, readOnly = false }) {
           onChange={readOnly ? undefined : (e) => onChange && onChange(e.target.value)}
           placeholder={placeholder}
           readOnly={readOnly}
-          className={`w-full rounded-xl border border-[#E6D9CC] px-3 py-2 outline-none
+          className={`w-full rounded-xl border border-[#E6D9CC] px-3 py-2 outline-none \
             ${
               readOnly
                 ? "bg-[#F9F7F3] text-[#6B7280]"

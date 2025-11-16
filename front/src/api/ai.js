@@ -11,17 +11,20 @@ import { api } from "./http";
  */
 export const createTravelRequest = async (payload) => {
   const { data } = await api.post("/travel-requests", payload);
+  console.log("[travel-requests 응답]", data);
 
   if (!data?.success) {
-    throw new Error(data?.message || "여행 요청 생성에 실패했습니다.");
+    alert(data?.message || "여행 요청 생성에 실패했습니다.");
+    return null;
   }
 
   const requestId = data?.data?.requestId;
   if (!requestId) {
-    throw new Error("요청 ID를 받아오지 못했습니다.");
+    alert(data?.message || "요청 ID를 받아오지 못했습니다.");
+    return null;
   }
 
-  return requestId; // ✅ PlannerPage에서 바로 숫자로 사용
+  return requestId;
 };
 
 /**

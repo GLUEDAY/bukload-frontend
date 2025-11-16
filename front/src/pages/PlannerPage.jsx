@@ -79,17 +79,22 @@ export default function PlannerPage() {
 
     try {
       await withLoading(async () => {
+        // 필수값 보정
+        const safeDeparture = departure && departure.trim() ? departure.trim() : "의정부역";
+        const safeTags = selectedTags && selectedTags.length > 0 ? selectedTags.join(", ") : "기본";
+        const safeRequest = freeText && freeText.trim() ? freeText.trim() : "";
+
         // 1) 여행 요청 생성 → requestId 숫자 반환
         const requestId = await createReq.mutateAsync({
-          themeId: 1, 
-          departureLocation: departure || "의정부역",
-          travelDays,
-          budget: 50000, 
-          style: selectedTags.join(", "),
-          companions,
-          additionalRequest: freeText,
-          gender: "F", 
-          birthDate: "1999-01-01", 
+          themeId: 1,
+          departureLocation: safeDeparture,
+          travelDays: travelDays || 1,
+          budget: 50000,
+          style: safeTags,
+          companions: companions || "friends",
+          additionalRequest: safeRequest,
+          gender: "F",
+          birthDate: "1999-01-01",
         });
 
         // 2) 지역 추천

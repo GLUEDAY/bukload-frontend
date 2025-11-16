@@ -1,3 +1,4 @@
+
 // src/pages/PlannerPage.jsx
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,16 +20,17 @@ import { useAlert } from "../context/AlertContext.jsx";
 const DURATIONS = ["당일치기", "1박 2일", "2박 3일", "3박 4일"];
 const TAGS = ["휴식 #힐링", "맛집 #로컬푸드", "포토 #인생샷", "액티비티 #도전", "문화 #전시", "쇼핑"];
 
+
 export default function PlannerPage() {
-  const [duration, setDuration] = useState("1박 2일");
-  const [departure, setDeparture] = useState("");
-  const [withWho, setWithWho] = useState("연인");
+  const [duration, setDuration] = useState('1박 2일');
+  const [departure, setDeparture] = useState('');
+  const [withWho, setWithWho] = useState('연인');
   const [selectedTags, setSelectedTags] = useState([]);
-  const [freeText, setFreeText] = useState("");
+  const [freeText, setFreeText] = useState('');
 
   // STEP2 직접입력
   const [customOpen, setCustomOpen] = useState(false);
-  const [customText, setCustomText] = useState("");
+  const [customText, setCustomText] = useState('');
 
   const navigate = useNavigate();
 
@@ -36,13 +38,15 @@ export default function PlannerPage() {
   const { showAlert } = useAlert();
 
   const toggleTag = (t) =>
-    setSelectedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+    setSelectedTags((prev) =>
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+    );
 
   const addCustomTag = () => {
     const t = customText.trim();
     if (!t) return;
     if (!selectedTags.includes(t)) setSelectedTags((prev) => [...prev, t]);
-    setCustomText("");
+    setCustomText('');
   };
 
   // ===== API 훅 =====
@@ -71,6 +75,7 @@ export default function PlannerPage() {
 
   const submit = async (e) => {
     e.preventDefault();
+
 
     try {
       await withLoading(async () => {
@@ -122,6 +127,7 @@ export default function PlannerPage() {
         "추천 과정에서 오류가 발생했어요.";
       showAlert(msg);
     }
+
   };
 
   return (
@@ -177,7 +183,7 @@ export default function PlannerPage() {
                 누구와 함께 떠날까요?
               </label>
               <Segmented
-                options={["혼자", "친구", "연인", "가족"]}
+                options={['혼자', '친구', '연인', '가족']}
                 value={withWho}
                 onChange={(v) => setWithWho(v)}
               />
@@ -192,12 +198,19 @@ export default function PlannerPage() {
               {/* 고정 태그 */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {TAGS.map((t) => (
-                  <Chip key={t} active={selectedTags.includes(t)} onClick={() => toggleTag(t)}>
+                  <Chip
+                    key={t}
+                    active={selectedTags.includes(t)}
+                    onClick={() => toggleTag(t)}
+                  >
                     {t}
                   </Chip>
                 ))}
                 {/* 직접 입력 토글 */}
-                <Chip active={customOpen} onClick={() => setCustomOpen((v) => !v)}>
+                <Chip
+                  active={customOpen}
+                  onClick={() => setCustomOpen((v) => !v)}
+                >
                   직접 입력!
                 </Chip>
               </div>
@@ -211,7 +224,7 @@ export default function PlannerPage() {
                     value={customText}
                     onChange={(e) => setCustomText(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === 'Enter') {
                         e.preventDefault();
                         addCustomTag();
                       }

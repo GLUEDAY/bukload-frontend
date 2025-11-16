@@ -1,48 +1,102 @@
-// src/App.jsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import PlannerPage from "./pages/PlannerPage";
-import ResultPage from "./pages/ResultPage";
-import CourseDetailPage from "./pages/CourseDetailPage";
-import ReceiptPage from "./pages/ReceiptPage";
-import ReviewPage from "./pages/ReviewPage";
-import SavedCoursePage from "./pages/SavedCoursePage";
-import CourseListPage from "./pages/CourseListPage";
-import AddPlacePage from "./pages/AddPlacePage";
 
-function NotFound() {
-  return <div style={{ padding: 16 }}>페이지를 찾을 수 없어요 😢</div>;
+import { Suspense } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useParams,
+} from "react-router-dom";
+
+// 전역 로딩/알럿
+import { LoadingProvider } from "./context/LoadingContext";
+import { AlertProvider } from "./context/AlertContext";
+import LoadingOverlay from "./ui/LoadingOverlay";
+
+// 공통 UI
+import BottomNav from "./ui/BottomNav";
+
+// 기본 페이지
+import HomePage from "./pages/HomePage";
+import PlannerPage from "./pages/PlannerPage";
+import MyPage from "./pages/MyPage";
+
+// 신규 페이지
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import AccountSettingsPage from "./pages/AccountSettingsPage";
+import MyReviewsPage from "./pages/MyReviewsPage";
+
+/* ===============================
+   내부 간단 플레이스홀더 (404 방지)
+   =============================== */
+function SavedCoursesPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF6ED] to-[#FDF7F1] p-6">
+      <h1 className="text-xl font-semibold text-[#8A6B52]">저장된 코스</h1>
+      <p className="mt-3 text-sm text-[#6B5B4A]">전체 저장 코스 목록 (연결 예정)</p>
+    </div>
+  );
+}
+function CourseDetailPage() {
+  const { id } = useParams();
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF6ED] to-[#FDF7F1] p-6">
+      <h1 className="text-xl font-semibold text-[#8A6B52]">코스 상세</h1>
+      <p className="mt-2 text-sm text-[#6B5B4A]">코스 ID: {id}</p>
+      <p className="mt-1 text-sm text-[#6B5B4A]">세부 정보는 백엔드 연결 시 표시됩니다.</p>
+    </div>
+  );
+}
+
+function Layout() {
+  const location = useLocation();
+  // 홈에서도 표시 -> 로그인/회원가입만 숨김
+  const HIDE_NAV = ["/login", "/signup"];
+  const hideNav = HIDE_NAV.includes(location.pathname);
+
+  return (
+    <>
+      <Routes>
+        {/* 메인 라우트 */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/planner" element={<PlannerPage />} />
+        <Route path="/mypage" element={<MyPage />} />
+
+        {/* 인증 */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+
+        {/* 마이페이지 하위 */}
+        <Route path="/settings" element={<AccountSettingsPage />} />
+        <Route path="/account" element={<AccountSettingsPage />} /> {/* 호환용 */}
+        <Route path="/my-reviews" element={<MyReviewsPage />} />
+
+        {/* 코스 관련 (플레이스홀더) */}
+        <Route path="/saved-courses" element={<SavedCoursesPage />} />
+        <Route path="/course/:id" element={<CourseDetailPage />} />
+
+        {/* 기타 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {!hideNav && <BottomNav />}
+    </>
+  );
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* 홈: 플래너 (검색/추가) */}
-        <Route path="/" element={<PlannerPage />} />
+    <Router>
+      <LoadingProvider>
+        <AlertProvider>
+          <Suspense fallback={<LoadingOverlay />}>
+            <Layout />
+          </Suspense>
+        </AlertProvider>
+      </LoadingProvider>
+    </Router>
 
-        {/* AI 추천 결과 */}
-        <Route path="/result" element={<ResultPage />} />
-
-        {/* 코스 목록 / 저장된 코스들 */}
-        <Route path="/ai-courses" element={<CourseListPage />} />
-        <Route path="/saved-courses" element={<SavedCoursePage />} />
-
-        {/* 코스 상세: id 파라미터 사용 */}
-        <Route path="/course/:id" element={<CourseDetailPage />} />
-        
-        {/* 후기 등록: 어떤 코스의 어떤 장소인지 파라미터 권장 */}
-        <Route path="/review/:courseId/:placeId" element={<ReviewPage />} />
-
-        {/* 영수증 인증: 필요하면 쿼리나 상태로 courseId/placeId 전달 */}
-        <Route path="/receipt-proof" element={<ReceiptPage />} />
-
-        {/* ✅ 장소 추가 페이지 라우트 */}
-        <Route path="/course/add-place" element={<AddPlacePage />} />
-
-
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
   );
 }

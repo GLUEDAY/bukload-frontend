@@ -8,7 +8,7 @@ export const WITH_CREDENTIALS =
 
 const http = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
+  timeout: 60000,
 
 });
 

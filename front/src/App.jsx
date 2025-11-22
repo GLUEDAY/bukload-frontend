@@ -27,6 +27,9 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
 import MyReviewsPage from "./pages/MyReviewsPage";
+import AiCourseListPage from "./pages/CourseListPage";
+import CourseDetailPage from "./pages/CourseDetailPage";
+import ResultPage from "./pages/ResultPage";
 
 /* ===============================
    내부 간단 플레이스홀더 (404 방지)
@@ -39,16 +42,7 @@ function SavedCoursesPage() {
     </div>
   );
 }
-function CourseDetailPage() {
-  const { id } = useParams();
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFF6ED] to-[#FDF7F1] p-6">
-      <h1 className="text-xl font-semibold text-[#8A6B52]">코스 상세</h1>
-      <p className="mt-2 text-sm text-[#6B5B4A]">코스 ID: {id}</p>
-      <p className="mt-1 text-sm text-[#6B5B4A]">세부 정보는 백엔드 연결 시 표시됩니다.</p>
-    </div>
-  );
-}
+
 
 function Layout() {
   const location = useLocation();
@@ -73,7 +67,11 @@ function Layout() {
         <Route path="/account" element={<AccountSettingsPage />} /> {/* 호환용 */}
         <Route path="/my-reviews" element={<MyReviewsPage />} />
 
-        {/* 코스 관련 (플레이스홀더) */}
+
+
+        {/* 코스 관련 */}
+        <Route path="/ai-courses" element={<AiCourseListPage />} />
+        <Route path="/result" element={<ResultPage />} />
         <Route path="/saved-courses" element={<SavedCoursesPage />} />
         <Route path="/course/:id" element={<CourseDetailPage />} />
 

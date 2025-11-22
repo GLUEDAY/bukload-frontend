@@ -10,12 +10,17 @@ import { ACCESS_TOKEN_KEY } from "../api/http.js";
 import { useLoading } from "../context/LoadingContext.jsx";
 import { useAlert } from "../context/AlertContext.jsx";
 
+
 export default function AiCourseListPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const { withLoading } = useLoading();
   const { showAlert } = useAlert();
+
+  // 진단용 콘솔 (ReferenceError 방지, 중복 제거)
+  // eslint-disable-next-line no-console
+  console.log("location.state:", location.state);
 
   const regionFromResult = location.state?.region || "의정부";
   const incoming = location.state?.courses || null; // AI 추천 코스 배열
@@ -30,89 +35,18 @@ export default function AiCourseListPage() {
     [incoming, serverCourses]
   );
 
-  const filteredCourses = COURSES.filter(
-    (c) =>
-      !c?.region ||
-      c.region === regionFromResult ||
-      regionFromResult === "의정부"
-  );
 
-  const handleCourseClick = async (course) => {
-    // 1) 이미 서버에 저장된 코스(id가 있는 경우) → 바로 상세로 이동
-    const existingId = course.id ?? course.courseId ?? course._id;
-    if (existingId) {
-      navigate(`/course/${existingId}`, {
-        state: {
-          region: course.region || regionFromResult,
-          title: course.title,
-          courseId: existingId,
-        },
-      });
-      return;
-    }
-
-    // 2) 아직 서버에 저장 안 된 AI 코스 → 저장 전에 로그인 체크
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-    if (!token) {
-      showAlert("코스를 저장하려면 로그인이 필요해요.");
-      navigate("/login", { state: { from: "/ai-courses" } });
-      return;
-    }
-
-    // 3) 저장에 필요한 메타 정보 없으면 에러
-    if (!meta?.requestId) {
-      showAlert(
-        "코스 정보를 저장할 수 있는 요청 ID가 없어요. 처음 단계부터 다시 시도해 주세요."
-      );
-      return;
-    }
-
-    try {
-      await withLoading(async () => {
-        const payload = {
-          requestId: meta.requestId,
-          anchorId: meta.anchorId,
-          title: course.title,
-          description: course.description,
-          places: (course.places || []).map((p, idx) => ({
-            placeId: null,
-            name: p.name,
-            category: p.category,
-            lat: p.lat,
-            lng: p.lng,
-            orderNo: idx + 1,
-            transportMode: "CAR", // 기본값
-          })),
-        };
-
-        const saved = await saveCourse.mutateAsync(payload);
-        const newId = saved.courseId ?? saved.id;
-
-        if (!newId) {
-          showAlert(
-            "코스는 저장되었지만 ID를 찾지 못했어요. 서버 응답을 확인해 주세요."
-          );
-          return;
-        }
-
-        // 저장된 코스 상세 페이지로 이동
-        navigate(`/course/${newId}`, {
-          state: {
-            region: saved.region || regionFromResult,
-            title: saved.title || course.title,
-            courseId: newId,
-          },
-        });
-      });
-    } catch (err) {
-      console.error(err);
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "코스를 저장하는 중 오류가 발생했어요.";
-      showAlert(msg);
-    }
+  const handleCourseClick = (course) => {
+    // 코스 리스트에서 코스 선택 시 /result로 이동 (단일 course만 전달)
+    navigate("/result", {
+      state: {
+        region: course.region || regionFromResult,
+        course, // 단일 코스 객체
+        meta,   // 메타 정보
+      },
+    });
   };
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -145,7 +79,7 @@ export default function AiCourseListPage() {
       {/* 리스트 (디자인 그대로) */}
       <main className="mt-6 flex-1 overflow-y-auto px-4 pb-24">
         <div className="flex flex-col gap-4">
-          {filteredCourses.map((course) => (
+          {COURSES.map((course) => (
             <button
               key={course.id ?? course.courseId ?? course._id ?? course.title}
               type="button"

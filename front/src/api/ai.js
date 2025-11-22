@@ -12,13 +12,14 @@ import { api } from "./http";
 export const createTravelRequest = async (payload) => {
   const { data } = await api.post("/travel-requests", payload);
   console.log("[travel-requests 응답]", data);
+  // 로그 보면 { success: true, data: 38, message: null } 이렇게 찍히는 그거!
 
   if (!data?.success) {
     alert(data?.message || "여행 요청 생성에 실패했습니다.");
     return null;
   }
 
-  const requestId = data?.data?.requestId;
+  const requestId = data?.data; // ✅ 여기만 수정!
   if (!requestId) {
     alert(data?.message || "요청 ID를 받아오지 못했습니다.");
     return null;
@@ -41,8 +42,12 @@ export const recommendRegion = async (requestIdOrObj) => {
       ? requestIdOrObj
       : requestIdOrObj?.requestId;
 
+  if (!requestId) {
+    throw new Error("유효한 requestId가 없습니다.");
+  }
+
   const { data } = await api.post(
-    "/recommendations/region",
+    "/recommendations/region", // ✅ /api 제거
     null,
     { params: { requestId } }
   );
@@ -64,31 +69,32 @@ export const recommendRegion = async (requestIdOrObj) => {
 export const recommendCourses = async ({ requestId, anchorId }) => {
   const { data } = await api.post(
     "/recommendations/courses",
-    null,
-    {
-      params: { requestId, anchorId },
-    }
+    { requestId, anchorId }   // ✅ body로 전달 (params 아님!)
   );
 
   if (!data?.success) {
     throw new Error(data?.message || "코스 추천에 실패했습니다.");
   }
 
-  // 필요에 따라 key 이름을 맞춰줄 수 있음
   const courses = data.data || [];
-  return { courses }; // ✅ PlannerPage: const courses = courseRes?.courses || [];
+  return { courses };
 };
+
 
 /**
  * 4. 추천 코스 확정 (저장)
  * POST /courses?tempCourseId=
  * 응답: { success, data: { courseId, ... }, message }
  */
+// 코스 확정 (저장)
+// 4. 추천 코스 확정 (저장)
 export const confirmRecommendedCourse = async ({ tempCourseId }) => {
+  console.log("✅ /courses 요청 tempCourseId:", tempCourseId);
+
   const { data } = await api.post(
     "/courses",
-    null,
-    { params: { tempCourseId } }
+    null,                 // body 없음
+    { params: { tempCourseId } }  // ✅ 쿼리스트링으로 전송
   );
 
   if (!data?.success) {

@@ -1,4 +1,3 @@
-
 // src/pages/PlannerPage.jsx
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,17 +19,16 @@ import { useAlert } from "../context/AlertContext.jsx";
 const DURATIONS = ["당일치기", "1박 2일", "2박 3일", "3박 4일"];
 const TAGS = ["휴식 #힐링", "맛집 #로컬푸드", "포토 #인생샷", "액티비티 #도전", "문화 #전시", "쇼핑"];
 
-
 export default function PlannerPage() {
-  const [duration, setDuration] = useState('1박 2일');
-  const [departure, setDeparture] = useState('');
-  const [withWho, setWithWho] = useState('연인');
+  const [duration, setDuration] = useState("1박 2일");
+  const [departure, setDeparture] = useState("");
+  const [withWho, setWithWho] = useState("연인");
   const [selectedTags, setSelectedTags] = useState([]);
-  const [freeText, setFreeText] = useState('');
+  const [freeText, setFreeText] = useState("");
 
   // STEP2 직접입력
   const [customOpen, setCustomOpen] = useState(false);
-  const [customText, setCustomText] = useState('');
+  const [customText, setCustomText] = useState("");
 
   const navigate = useNavigate();
 
@@ -46,7 +44,7 @@ export default function PlannerPage() {
     const t = customText.trim();
     if (!t) return;
     if (!selectedTags.includes(t)) setSelectedTags((prev) => [...prev, t]);
-    setCustomText('');
+    setCustomText("");
   };
 
   // ===== API 훅 =====
@@ -54,8 +52,8 @@ export default function PlannerPage() {
   const recRegion = useRecommendRegion();
   const recCourses = useRecommendCourses();
 
-  const isSubmitting = createReq.isPending || recRegion.isPending || recCourses.isPending;
-
+  const isSubmitting =
+    createReq.isPending || recRegion.isPending || recCourses.isPending;
 
   const travelDays = useMemo(() => {
     if (duration === "당일치기") return 1;
@@ -75,7 +73,6 @@ export default function PlannerPage() {
 
   const submit = async (e) => {
     e.preventDefault();
-
 
     try {
       await withLoading(async () => {
@@ -101,7 +98,6 @@ export default function PlannerPage() {
         const regionRes = await recRegion.mutateAsync(requestId);
         const regionName = regionRes?.region || "의정부";
         const anchorId = regionRes?.anchorId;
-
         if (!anchorId) {
           throw new Error("추천 지역 정보를 가져오지 못했어요. 다시 시도해 주세요.");
         }
@@ -110,7 +106,7 @@ export default function PlannerPage() {
         const courseRes = await recCourses.mutateAsync({ requestId, anchorId });
         const courses = courseRes?.courses || [];
 
-        // 4) 코스 리스트 페이지로 이동 (AI 응답 기반)
+        // 4) 코스 리스트 페이지로 이동 (courses, meta 포함)
         navigate("/ai-courses", {
           state: {
             region: regionName,
@@ -126,13 +122,9 @@ export default function PlannerPage() {
       });
     } catch (err) {
       console.error(err);
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "추천 과정에서 오류가 발생했어요.";
+      const msg = err?.response?.data?.message || err?.message || "추천 과정에서 오류가 발생했어요.";
       showAlert(msg);
     }
-
   };
 
   return (
@@ -188,7 +180,7 @@ export default function PlannerPage() {
                 누구와 함께 떠날까요?
               </label>
               <Segmented
-                options={['혼자', '친구', '연인', '가족']}
+                options={["혼자", "친구", "연인", "가족"]}
                 value={withWho}
                 onChange={(v) => setWithWho(v)}
               />
@@ -229,7 +221,7 @@ export default function PlannerPage() {
                     value={customText}
                     onChange={(e) => setCustomText(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         e.preventDefault();
                         addCustomTag();
                       }

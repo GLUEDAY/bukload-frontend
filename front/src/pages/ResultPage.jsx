@@ -19,46 +19,64 @@ export default function ResultPage() {
   const location = useLocation();
   const { showAlert } = useAlert();
 
-  // Planner(or 이전 단계)에서 넘어온 AI 응답 기반 데이터들
+  // 🔹 PlannerPage 에서 넘겨주는 값들
   const regionFromPlanner = location.state?.region || null;         // AI 추천 지역명 (한글)
   const coursesFromPlanner = location.state?.courses || null;       // 추천 코스 배열
-  const metaFromPlanner = location.state?.meta || null;             // { requestId, anchorId }
+  const metaFromPlanner = location.state?.meta || null;             // { requestId, anchorId, regionComment, regionTags }
 
-  const commentFromPlanner = location.state?.comment || null;       // RegionRecommendation.comment
-  const tagsFromPlanner = location.state?.tags || null;             // RegionRecommendation.tags(string[])
+  // 🔹 comment / tags 는 meta 안에 들어있으니까 거기서 꺼냄
+  const commentFromPlanner = metaFromPlanner?.regionComment || null;
+  const tagsFromPlanner = metaFromPlanner?.regionTags || null;
   const landmarkFromPlanner = location.state?.landmark || null;     // 선택: 대표 랜드마크
 
   const [showRegionSelector, setShowRegionSelector] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(regionFromPlanner || "의정부");
-
-  // 카드 타이틀/설명에 쓸 표시명 (영문 타이틀)
   const regionTitle = useMemo(
     () => REGION_TITLE[selectedRegion] || selectedRegion,
     [selectedRegion]
   );
 
-  // CTA 클릭 → /ai-courses 로 이동 (state 전달)
-  const goToAiCourses = () => {
-    // 혹시 AI 추천 코스/메타 정보 없이 들어온 경우, 안내만 살짝 띄워줌
-    if (!coursesFromPlanner && !metaFromPlanner) {
-      showAlert("AI 추천 코스 정보가 없어 기본 코스를 보여드릴게요.");
+  // ✅ 공통: 코스 상세 페이지로 이동하는 함수
+  const goToCourseDetail = (course) => {
+    const courseId =
+      course.id ??
+      course.courseId ??
+      course._id ??
+      course.tempCourseId;
+
+    if (!courseId) {
+      showAlert("코스 ID가 없어 상세 페이지로 이동할 수 없어요.");
+      console.log("❌ courseId 없음, course:", course);
+      return;
     }
 
-    navigate("/ai-courses", {
+    navigate(`/course/${courseId}`, {
       state: {
-        region: selectedRegion,
-        courses: coursesFromPlanner || undefined, // 있으면 그대로 전달
-        meta: metaFromPlanner || undefined,
+        region: course.region || selectedRegion,
+        title: course.title,
+        courseId,
+        course,
+        meta: metaFromPlanner,
       },
     });
   };
 
-  // 대표 랜드마크 텍스트 (AI/상위 단계에서 landmark 넘겨주면 그거 사용)
+  // ✅ 메인 CTA: 첫 번째 추천 코스의 상세 페이지로 이동
+  const goToFirstCourse = () => {
+    if (!Array.isArray(coursesFromPlanner) || coursesFromPlanner.length === 0) {
+      showAlert("추천 코스 정보가 없어 코스를 보여줄 수 없어요.");
+      return;
+    }
+    const firstCourse = coursesFromPlanner[0];
+    goToCourseDetail(firstCourse);
+  };
+
+  // 대표 랜드마크 텍스트
   const landmarkText =
     landmarkFromPlanner ||
     `${selectedRegion} 미술도서관`; // 아직 서버에서 안 주면 기존 더미로 fallback
 
-  // Comment 텍스트 (AI comment 우선, 없으면 tags 또는 기존 더미)
+  // Comment 텍스트
   const commentText = (() => {
     if (commentFromPlanner) return commentFromPlanner;
 
@@ -126,10 +144,35 @@ export default function ResultPage() {
             </div>
           </div>
 
-          {/* 메인 CTA 버튼 */}
+          {/* 추천 코스 리스트: 각 버튼 → 코스 상세 페이지 */}
+          {Array.isArray(coursesFromPlanner) && coursesFromPlanner.length > 0 && (
+            <div className="mt-6 space-y-3">
+              {coursesFromPlanner.map((course, idx) => {
+                const key =
+                  course.id ??
+                  course.courseId ??
+                  course._id ??
+                  course.tempCourseId ??
+                  idx;
+
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => goToCourseDetail(course)}
+                    className="w-full py-4 rounded-xl bg-[#F3F3FF] text-[#2F2F6F] text-base font-bold shadow-sm border border-[#D1D5DB] hover:bg-[#E0E7FF] transition"
+                  >
+                    {course.title || `추천 코스 ${idx + 1}`}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 메인 CTA 버튼: 첫 번째 코스 상세로 */}
           <button
             type="button"
-            onClick={goToAiCourses}
+            onClick={goToFirstCourse}
             className="mt-5 w-full py-5 sm:py-5 rounded-xl bg-[#2DAEA1] text-white text-base sm:text-[17px] font-Inter font-bold shadow-md"
           >
             네, 좋아요! {selectedRegion} 추천 코스 보기

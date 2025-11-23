@@ -255,13 +255,16 @@ export default function CourseDetailPage() {
   };
 
   // ===== 로딩/에러 가드 =====
-  if (isLoading) return <div className="p-4">코스를 불러오는 중…</div>;
-  if (error) return <div className="p-4">코스를 불러오지 못했어요.</div>;
-  if (!data) return <div className="p-4">데이터가 비어 있습니다.</div>;
+  //if (isLoading) return <div className="p-4">코스를 불러오는 중…</div>;
+  //if (error) return <div className="p-4">코스를 불러오지 못했어요.</div>;
+  //if (!data) return <div className="p-4">데이터가 비어 있습니다.</div>;
+
+   if (isLoading && !data) return <div className="p-4">코스를 불러오는 중…</div>;
 
   const title =
-    data.title || (data.region ? `${data.region} 코스` : "코스 상세");
-  const region = data.region || "의정부";
+  data?.title || (data?.region ? `${data.region} 코스` : "코스 상세");
+const region = data?.region || "의정부";
+
 
   return (
     <div className="min-h-screen bg-[#F5F7FB] flex flex-col">
@@ -473,25 +476,7 @@ export default function CourseDetailPage() {
             >
               코스 수정하기
             </button>
-          ) : (
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="flex-1 py-[10px] rounded-[10px] border border-[#E0E0E0] text-[#545454] text-[16px] font-semibold flex items-center justify-center bg-white"
-              >
-                코스 수정하기
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saveSeg.isPending}
-                className="flex-1 py-[10px] rounded-[10px] bg-[#3151C3] text-white text-[16px] font-semibold flex items-center justify-center disabled:bg-[#B7C4F3]"
-              >
-                {saveSeg.isPending ? "저장 중…" : "저장"}
-              </button>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
 

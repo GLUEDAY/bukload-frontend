@@ -17,11 +17,6 @@ export default function AiCourseListPage() {
 
   const { withLoading } = useLoading();
   const { showAlert } = useAlert();
-
-  // 진단용 콘솔 (ReferenceError 방지, 중복 제거)
-  // eslint-disable-next-line no-console
-  console.log("location.state:", location.state);
-
   const regionFromResult = location.state?.region || "의정부";
   const incoming = location.state?.courses || null; // AI 추천 코스 배열
   const meta = location.state?.meta || null;        // { requestId, anchorId }

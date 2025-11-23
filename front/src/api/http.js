@@ -1,30 +1,26 @@
 // src/api/http.js
 import axios from "axios";
+
 export const ACCESS_TOKEN_KEY = "accessToken";
 export const REFRESH_TOKEN_KEY = "refreshToken";
 export const BASE_URL = import.meta.env.VITE_API_URL || "http://18.118.143.23";
-export const WITH_CREDENTIALS =
-  import.meta.env.VITE_WITH_CREDENTIALS === "true";
 
 const http = axios.create({
   baseURL: BASE_URL,
   timeout: 60000,
-
+  // ✅ withCredentials 제거 → CORS 즉시 해결
 });
-
 
 export const api = http;
 
-
+// 🔐 요청마다 Bearer 토큰 자동 첨부
 http.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-
     if (token) {
       config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`; // Bearer 토큰
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => Promise.reject(error)
@@ -37,7 +33,6 @@ async function refreshToken() {
   const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
   if (!refresh) throw new Error("NO_REFRESH");
 
-  // 🔹 refresh 토큰은 body 로 전달
   const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
     refreshToken: refresh,
   });
@@ -45,11 +40,9 @@ async function refreshToken() {
   const newAccess = data && data.accessToken;
   if (!newAccess) throw new Error("NO_ACCESS");
 
-  // 새 access 토큰 저장
   localStorage.setItem(ACCESS_TOKEN_KEY, newAccess);
   return newAccess;
 }
-
 
 http.interceptors.response.use(
   (res) => res,
@@ -64,11 +57,7 @@ http.interceptors.response.use(
             original.headers = original.headers || {};
             original.headers.Authorization = `Bearer ${token}`;
             original._retry = true;
-
-            http
-              .request(original)
-              .then(resolve)
-              .catch(reject);
+            http.request(original).then(resolve).catch(reject);
           });
         });
       }
@@ -76,7 +65,6 @@ http.interceptors.response.use(
       try {
         isRefreshing = true;
         const token = await refreshToken();
-
 
         waiters.forEach((w) => w(token));
         waiters = [];
